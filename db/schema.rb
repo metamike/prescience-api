@@ -11,10 +11,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150111202251) do
+ActiveRecord::Schema.define(version: 20150114024400) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "monthly_overrides", force: :cascade do |t|
+    t.integer  "vector_id"
+    t.string   "vector_type"
+    t.string   "month"
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+    t.integer  "amount_cents",    default: 0,     null: false
+    t.string   "amount_currency", default: "USD", null: false
+  end
+
+  create_table "savings_accounts", force: :cascade do |t|
+    t.integer  "scenario_id"
+    t.string   "starting_month"
+    t.decimal  "interest_rate",             precision: 7, scale: 4
+    t.datetime "created_at",                                                        null: false
+    t.datetime "updated_at",                                                        null: false
+    t.integer  "starting_balance_cents",                            default: 0,     null: false
+    t.string   "starting_balance_currency",                         default: "USD", null: false
+  end
 
   create_table "scenarios", force: :cascade do |t|
     t.string   "name"
