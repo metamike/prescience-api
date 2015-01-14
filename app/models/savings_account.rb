@@ -13,8 +13,8 @@ class SavingsAccount < ActiveRecord::Base
   validates :starting_month, presence: true
 
   def calc(month)
-    override = overrides.find { |o| o.month == month }
-    return override if override
+    override = monthly_overrides.find { |o| o.month == month }
+    return override.amount if override
 
     balance = starting_balance
     starting_month.upto(month) do |_month|

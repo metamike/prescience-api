@@ -14,6 +14,9 @@ describe SavingsAccount, :type => :model do
 
   it 'should use overrides if they are set' do
     override = MonthlyOverride.create!(month: Month.new(2014, 11), amount: 45.14)
+    account.monthly_overrides << override
+    val = account.calc(Month.new(2014, 11))
+    expect(val).to eq(45.14)
   end
 
 end
