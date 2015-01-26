@@ -31,8 +31,27 @@ class Month
     end
   end
 
+  def prior
+    if month > 1
+      Month.new(year, month - 1)
+    else
+      Month.new(year - 1, 12)
+    end
+  end
+
+  def ==(other)
+    return false unless other
+    @year == other.year && @month == other.month
+  end
+  alias_method :eql?, :==
+
   def <=>(other)
+    return nil unless other
     @year == other.year ? @month <=> other.month : @year <=> other.year
+  end
+
+  def hash
+    to_s.hash
   end
 
   def to_s

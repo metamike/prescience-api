@@ -11,30 +11,42 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150114024400) do
+ActiveRecord::Schema.define(version: 20150122154506) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "monthly_overrides", force: :cascade do |t|
-    t.integer  "vector_id"
-    t.string   "vector_type"
-    t.string   "month"
-    t.datetime "created_at",                      null: false
-    t.datetime "updated_at",                      null: false
-    t.integer  "amount_cents",    default: 0,     null: false
-    t.string   "amount_currency", default: "USD", null: false
+  create_table "income_accounts", force: :cascade do |t|
+    t.integer  "scenario_id"
+    t.string   "name"
+    t.string   "starting_month"
+    t.decimal  "annual_gross",   precision: 8, scale: 2
+    t.datetime "created_at",                             null: false
+    t.datetime "updated_at",                             null: false
   end
+
+  create_table "savings_account_activities", force: :cascade do |t|
+    t.integer  "savings_account_id"
+    t.string   "month"
+    t.decimal  "interest",           precision: 9,  scale: 2
+    t.decimal  "ending_balance",     precision: 11, scale: 2
+    t.datetime "created_at",                                  null: false
+    t.datetime "updated_at",                                  null: false
+  end
+
+  add_index "savings_account_activities", ["savings_account_id"], name: "index_savings_account_activities_on_savings_account_id", using: :btree
 
   create_table "savings_accounts", force: :cascade do |t|
     t.integer  "scenario_id"
+    t.integer  "income_account_id"
     t.string   "starting_month"
-    t.decimal  "interest_rate",             precision: 7, scale: 4
-    t.datetime "created_at",                                                        null: false
-    t.datetime "updated_at",                                                        null: false
-    t.integer  "starting_balance_cents",                            default: 0,     null: false
-    t.string   "starting_balance_currency",                         default: "USD", null: false
+    t.decimal  "starting_balance",  precision: 9, scale: 2
+    t.decimal  "interest_rate",     precision: 7, scale: 4
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
   end
+
+  add_index "savings_accounts", ["income_account_id"], name: "index_savings_accounts_on_income_account_id", using: :btree
 
   create_table "scenarios", force: :cascade do |t|
     t.string   "name"
