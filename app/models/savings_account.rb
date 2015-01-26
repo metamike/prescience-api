@@ -16,17 +16,6 @@ class SavingsAccount < ActiveRecord::Base
 
   validate :activities_must_be_in_sequence
 
-  def activities_must_be_in_sequence
-    current_month = starting_month
-    savings_account_activities.each do |activity|
-      if activity.month != current_month
-        errors.add(:savings_account_activities, "activity #{activity.month} is out of sequence")
-        break
-      end
-      current_month = current_month.next
-    end
-  end
-
   def credit(month, amount)
     reset_month(month) unless @transactions[month]
     @transactions[month][:credits] += amount
@@ -77,6 +66,17 @@ class SavingsAccount < ActiveRecord::Base
 
   def init_transactions
     @transactions = {}
+  end
+
+  def activities_must_be_in_sequence
+    current_month = starting_month
+    savings_account_activities.each do |activity|
+      if activity.month != current_month
+        errors.add(:savings_account_activities, "activity #{activity.month} is out of sequence")
+        break
+      end
+      current_month = current_month.next
+    end
   end
 
   def reset_month(month)
