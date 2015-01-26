@@ -7,7 +7,7 @@ class SavingsAccount < ActiveRecord::Base
 
   serialize :starting_month
 
-  validates :interest_rate, presence: true
+  validates :interest_rate, presence: true, numericality: true
   validates :starting_month, presence: true
 
   validates :starting_balance, presence: true, numericality: true, if: ->(a) { a.savings_account_activities.empty? }

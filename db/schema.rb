@@ -11,10 +11,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150122154506) do
+ActiveRecord::Schema.define(version: 20150126020100) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "income_account_activities", force: :cascade do |t|
+    t.integer  "income_account_id"
+    t.string   "month"
+    t.decimal  "gross",             precision: 9, scale: 2
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+  end
+
+  add_index "income_account_activities", ["income_account_id"], name: "index_income_account_activities_on_income_account_id", using: :btree
 
   create_table "income_accounts", force: :cascade do |t|
     t.integer  "scenario_id"
