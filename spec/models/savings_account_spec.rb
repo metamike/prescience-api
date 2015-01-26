@@ -52,16 +52,14 @@ describe SavingsAccount, :type => :model do
     expect { account.project(savings_account.starting_month.prior) }.to raise_error
   end
 
-  it 'should use historicals if present' do
+  it 'should use historicals if present and not require projection' do
     account.savings_account_activities << activity
-    account.project(activity.month)
     expect(account.interest(activity.month)).to eq(activity.interest)
     expect(account.ending_balance(activity.month)).to eq(activity.ending_balance)
   end
 
   it 'should calculate the next month' do
     account.savings_account_activities << activity
-    account.project(activity.month)
     month = activity.month.next
     account.project(month)
     expect(account.interest(month)).to eq(activity.ending_balance * account.interest_rate)
@@ -70,7 +68,6 @@ describe SavingsAccount, :type => :model do
 
   it 'should calculate two months ahead' do
     account.savings_account_activities << activity
-    account.project(activity.month)
     account.project(activity.month.next)
     month = activity.month.next.next
     account.project(month)
