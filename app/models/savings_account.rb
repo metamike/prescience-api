@@ -46,12 +46,12 @@ class SavingsAccount < ActiveRecord::Base
       # No work to be done here
     elsif month == starting_month
       @transactions[month][:interest] = calc_interest(starting_balance, @transactions[month])
-      @transactions[month][:ending_balance] = starting_balance + @transactions[month][:interest]
+      @transactions[month][:ending_balance] = calc_balance(starting_balance, @transactions[month])
     else
       prior_tx = @transactions[month.prior]
       raise "Could not find prior month's ending balance: #{month.prior}" unless prior_tx
       @transactions[month][:interest] = calc_interest(prior_tx[:ending_balance], @transactions[month])
-      @transactions[month][:ending_balance] = prior_tx[:ending_balance] + @transactions[month][:interest]
+      @transactions[month][:ending_balance] = calc_balance(prior_tx[:ending_balance], @transactions[month])
     end
   end
 
@@ -69,6 +69,10 @@ class SavingsAccount < ActiveRecord::Base
 
   def calc_interest(starting_balance, tracker)
     (starting_balance + tracker[:credits] - tracker[:debits]) * interest_rate
+  end
+
+  def calc_balance(starting_balance, tracker)
+    starting_balance + tracker[:credits] - tracker[:debits] + calc_interest(starting_balance, tracker)
   end
 
   def init_transactions

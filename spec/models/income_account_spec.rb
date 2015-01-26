@@ -2,14 +2,15 @@ require 'rails_helper'
 
 describe IncomeAccount, :type => :model do
 
+  let(:account) { build(:income_account) }
+  let(:activity) { build(:income_account_activity, month: account.starting_month, income_account: account) }
+
   context 'validations' do
     it { should validate_presence_of(:name) }
     it { should validate_presence_of(:starting_month) }
     it { should validate_presence_of(:annual_gross) }
     it { should validate_numericality_of(:annual_gross) }
 
-    let(:account) { build(:income_account) }
-    let(:activity) { build(:income_account_activity, month: account.starting_month, income_account: account) }
     let(:activity_good) { build(:income_account_activity, month: activity.month.next, income_account: account) }
     let(:activity_bad) { build(:income_account_activity, month: activity.month.next.next, income_account: account) }
 
@@ -27,28 +28,30 @@ describe IncomeAccount, :type => :model do
     end
   end
 
-#  it 'should use overrides if they are set' do
-#    override = MonthlyOverride.create!(month: Month.new(2014, 11), amount: 45.14)
-#    account.monthly_overrides << override
-#    val = account.calc(Month.new(2014, 11))
-#    expect(val).to eq(45.14)
-#  end
-#
-#  it 'should error when requesting a date before the present' do
-#    expect { account.calc(account.starting_month.prior) }.to raise_error
-#  end
-#
-#  it 'should use the interest rate to calculate with precision' do
-#    val = account.calc(account.starting_month)
-#    expect(val).to eq((1 + account.interest_rate) * account.starting_balance)
-#    val2 = account.calc(account.starting_month.next)
-#    expect(val2).to eq((1 + account.interest_rate)**2 * account.starting_balance)
-#    puts "#{account.interest_rate} - #{account.starting_balance}"
-#    val3 = account.calc(account.starting_month.next.next)
-#    expect(val3).to eq((1 + account.interest_rate)**3 * account.starting_balance)
-#    val4 = account.calc(account.starting_month.next.next.next)
-#    expect(val4).to eq((1 + account.interest_rate)**4 * account.starting_balance)
-#  end
+  it 'should use activity if present' do
+    account.income_account_activities << activity
+    account.project(activity.month)
+    expect(account.gross(activity.month)).to eq(activity.gross)
+    account.savings_account.project(activity.month)
+    expect(account.savings_account.interest(activity.month)).to eq(
+      (account.savings_account.starting_balance + activity.gross) * account.savings_account.interest_rate
+    )
+    expect(account.savings_account.ending_balance(activity.month)).to eq(
+      account.savings_account.starting_balance + activity.gross + account.savings_account.interest(activity.month)
+    )
+  end
+
+  it 'should calculate when it has no activity' do
+    account.project(account.starting_month)
+    expect(account.gross(account.starting_month)).to eq(account.annual_gross / 12.0)
+    account.savings_account.project(account.starting_month)
+    expect(account.savings_account.interest(account.starting_month)).to eq(
+      (account.savings_account.starting_balance + account.annual_gross / 12.0) * account.savings_account.interest_rate
+    )
+    expect(account.savings_account.ending_balance(account.starting_month)).to eq(
+      account.savings_account.starting_balance + account.annual_gross / 12.0 + account.savings_account.interest(account.starting_month)
+    )
+  end
 
 end
 

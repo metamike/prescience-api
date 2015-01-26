@@ -48,6 +48,9 @@ describe SavingsAccount, :type => :model do
   let(:account) { build(:savings_account) }
   let(:activity) { build(:savings_account_activity, month: account.starting_month, savings_account: account) }
 
+  let(:credit) { Faker::Number.number(6).to_i / 100.0 }
+  let(:debit) { Faker::Number.number(5).to_i / 100.0 }
+
   it 'should fails when requesting a date before the present' do
     expect { account.project(savings_account.starting_month.prior) }.to raise_error
   end
@@ -73,6 +76,18 @@ describe SavingsAccount, :type => :model do
     account.project(month)
     expect(account.interest(month)).to eq((activity.ending_balance * (1 + account.interest_rate)) * account.interest_rate)
     expect(account.ending_balance(month)).to eq(account.ending_balance(activity.month.next) + account.interest(month))
+  end
+
+  it 'should respect credits and debits' do
+    account.credit(account.starting_month, credit)
+    account.debit(account.starting_month, debit)
+    account.project(account.starting_month)
+    expect(account.interest(account.starting_month)).to eq(
+      (account.starting_balance + credit - debit) * account.interest_rate
+    )
+    expect(account.ending_balance(account.starting_month)).to eq(
+      account.starting_balance + credit - debit + account.interest(account.starting_month)
+    )
   end
 
 end
