@@ -60,6 +60,7 @@ GEM
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     diff-lcs (1.2.5)
+    distribution (0.7.1)
     equalizer (0.0.9)
     erubis (2.7.0)
     execjs (2.2.2)
@@ -214,6 +215,7 @@ DEPENDENCIES
   active_model_serializers
   ancestry
   byebug
+  distribution
   factory_girl_rails
   faker
   grape (~> 0.9.0)

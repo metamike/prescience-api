@@ -1,11 +1,31 @@
 == README
 
+TODO Bonuses
+TODO Raise
+TODO Recessions (no income)
+TODO Other Income
 TODO Expense Accounts
+ * Annual amounts, paid monthly
+    - hygiene, groceries, kitchenware, entertainment, other
+ * Increase monthly at a rate
+ * Increases annualy at a rate
+ * Paid every X months per year
+    - insurance, tag fees, CC fees, 
+ * w/ one-time spot exceptions
+ * Paid every X years and increasing at a rate
+ * w/ ending date
+    - rent, rental propertu
 TODO Mortgages
+TODO Rental Property
+TODO Sell a Property
+TODO Car
+TODO Utilities
+TODO Travel
 TODO Scenario ancestry
 TODO Use random variables for attributes w/ uncertainty?
 TODO Equity
 TODO 401(k)'s and IRAs
-TODO Investment accounts (stock/bond mix)
+TODO Investment accounts (stock/bond mix & dividends)
+TODO Retirement
 TODO Implement allocation strategies
 TODO Run strategies using bayesian simulations

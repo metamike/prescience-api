@@ -33,6 +33,7 @@ gem 'jquery-rails'
 # gem 'capistrano-rails', group: :development
 
 gem 'ancestry'
+gem 'distribution'
 
 # API Development
 gem 'active_model_serializers'
