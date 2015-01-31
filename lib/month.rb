@@ -50,6 +50,14 @@ class Month
     @year == other.year ? @month <=> other.month : @year <=> other.year
   end
 
+  def -(other)
+    (self.year * 12 + self.month - 1) - (other.year * 12 + other.month - 1)
+  end
+
+  def year_diff(other)
+    self.year - other.year
+  end
+
   def hash
     to_s.hash
   end

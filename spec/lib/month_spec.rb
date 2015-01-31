@@ -33,4 +33,19 @@ describe Month do
                          Month.new(2013, 12), Month.new(2014, 1), Month.new(2014, 2)])
   end
 
+  it 'should subtract months' do
+    month = Month.new(2013, 9)
+    expect(month - Month.new(2013, 9)).to eq(0)
+    expect(month - Month.new(2012, 10)).to eq (11)
+    expect(month - Month.new(2012, 9)).to eq(12)
+    expect(month - Month.new(2014, 1)).to eq(-4)
+  end
+
+  it 'should subtract years' do
+    month = Month.new(2013, 9)
+    expect(month.year_diff(Month.new(2013, 10))).to eq(0)
+    expect(month.year_diff(Month.new(2015, 1))).to eq(-2)
+    expect(month.year_diff(Month.new(2010, 50))).to eq(3)
+  end
+
 end
