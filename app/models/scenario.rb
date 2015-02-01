@@ -4,6 +4,7 @@ class Scenario < ActiveRecord::Base
 
   has_many :savings_accounts
   has_many :income_accounts
+  has_many :expense_accounts
 
   after_initialize :init_report
 

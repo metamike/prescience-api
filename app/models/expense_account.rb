@@ -22,10 +22,12 @@ class ExpenseAccount < ActiveRecord::Base
     return @transactions[month] if @transactions[month]
 
     if year_matches(month.year) && month_matches(month.month)
-      @transactions[month] = (starting_amount * coefficients[month.month - 1]) * raise_coefficient(month)
+      amount = (starting_amount * coefficients[month.month - 1]) * raise_coefficient(month)
     else
-      @transactions[month] = BigDecimal.new('0')
+      amount = BigDecimal.new('0')
     end
+    transact(month, amount)
+    @transactions[month] = amount
   end
 
   def amount(month)
@@ -75,6 +77,27 @@ class ExpenseAccount < ActiveRecord::Base
 
   def transactions_from_activity(activity)
     @transactions[activity.month] = activity.amount
+  end
+
+  def transact(month, amount)
+    savings_accounts = scenario.savings_accounts.sort_by(&:interest_rate)
+    current = amount
+    savings_accounts.each do |account|
+      current = debit_account(account, month, current)
+      break if current > 0
+    end
+    raise "Insufficient funds to debit #{amount} for #{name}" if current > 0
+  end
+
+  def debit_account(account, month, amount)
+    if account.ending_balance(month.prior) >= amount
+      account.debit(month, amount)
+      0
+    else
+      remaining = amount - account.ending_balance(month.prior)
+      account.debit(month, account.ending_balance(month.prior))
+      remaining
+    end
   end
 
 end

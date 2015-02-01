@@ -1,94 +1,14 @@
 == README
 
+- Savings Accounts
+- Income
+- Expense Accounts
+- Raise
+TODO Connect income, expense, and savings accounts through scenario and project
+TODO One-Time Expenses
 TODO Bonuses
-TODO Raise
 TODO Recessions (no income)
 TODO Other Income
-
-TODO Expense Accounts
- * Annual amounts, paid monthly
- * Increase monthly at a rate
- * Increases annualy at a rate
- * Paid every X months per year
- * w/ one-time spot exceptions
- * Paid every X years and increasing at a rate
- * w/ ending date
-
- x = monthly amount
- X = annual amount
- r = monthly inflation
- R = annual inflation
- (x) - normally distributed random variable around x mean
-
-Variants
-========
-Starting amount (x), raises every month at rate (r)
-Every Year, on months [m], amount (x), raises every year at rate (r)
-Starting amount (x), raises every year at rate (r)
-Starting amount (x), on months [m], raise by (p), raises every month at rate (r)
-?? Every (y) Year, on random month (r_m), starting amount (x), raises every year at rate (r)
-
-Generalizable
-=============
- - amount
- - rate of increase
- - when increase {monthly, annually}
- - how often, in years (default is 1)
- - monthly coefficients: [int..int]{12}
-    - if nil, then all coeffs are 1
-    - (to do annually, do 0,0,0,1,0..0)
-
-Major Expense
-=============
- - name
-
-Note: consider breaking out things like appliances into two things:
- - appliance repair - every year at budget X
- - major appliance purchase - part of the big not-so-regular expense thing
-
-Examples
-========
- * Other: allM: x * r
- * CC Fees: 08M: X * R
- * Local Travel: allM: x * r
- * Tools & HW: allM: x * r
- * Hygiene & Beauty: allM: x * r
- * Electronics: allM: x * r
- * Getting to Work: allM: x, eachY: x + R
- * Kitchenware: allM: x * r
- * Gifts: allM: x * r, 12M: (x + r) * 3
- * Gas: allM: x * r
- * Clothing: allM: x * r
- * Appliances: each(x)Y: X * R, randomM
- * Furnuture: each(x)Y: X * R, randomM
- * Alcohol: allM: x * r
- * Groceries: allM: x * r
- * Eating Out: allM: x * r
- * Medical Care: allM: x * r, each(x)Y: X + R
- * TV/Internet: allM: x, eachY: x + R
- * Cell Phone: allM: x, eachY: x + R
- * Water/Trash: allM: x * r
- * Power: 03-10: x + r, 11-02: (x + r) * 2
- * Car Accidents: nil
- * College Loans: nil
- * Moving Expenses: nil
- * Renter's Insurance: nil
- * Rent: nil
- * Home Closing Costs: nil
- * Landscaping & Garden: allM: x * r
- * Home Repairs: allM: x * r, each(X)Y: X + R
- * Home Improvements: ???
-
- - Travel
- - State Tag Fees (Car)
- - Car Insurance (Car)
- - Car Maintenance (Car)
- - Rental Mgmt (Rental)
- - Rental Repairs (Rental)
- - Rental Improvements (Rental)
- - Rental Escrow (Rental)
- - Rental Mortgage (Rental)
- - Renter's Insurance
 TODO Mortgages
 TODO Rental Property
 TODO Sell a Property
@@ -103,3 +23,4 @@ TODO Investment accounts (stock/bond mix & dividends)
 TODO Retirement
 TODO Implement allocation strategies
 TODO Run strategies using bayesian simulations
+

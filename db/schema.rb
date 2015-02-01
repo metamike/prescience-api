@@ -56,6 +56,7 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.string   "name"
     t.string   "starting_month"
     t.decimal  "annual_gross",   precision: 8, scale: 2
+    t.decimal  "annual_raise",   precision: 3, scale: 3
     t.datetime "created_at",                             null: false
     t.datetime "updated_at",                             null: false
   end

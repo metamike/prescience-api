@@ -10,6 +10,7 @@ describe IncomeAccount, :type => :model do
     it { should validate_presence_of(:starting_month) }
     it { should validate_presence_of(:annual_gross) }
     it { should validate_numericality_of(:annual_gross) }
+    it { should validate_numericality_of(:annual_raise) }
 
     let(:activity_good) { build(:income_account_activity, month: activity.month.next, income_account: account) }
     let(:activity_bad) { build(:income_account_activity, month: activity.month.next.next, income_account: account) }
@@ -51,6 +52,22 @@ describe IncomeAccount, :type => :model do
     expect(account.savings_account.ending_balance(account.starting_month)).to eq(
       account.savings_account.starting_balance + account.annual_gross / 12.0 + account.savings_account.interest(account.starting_month)
     )
+  end
+
+  context 'with annual raise' do
+
+    let(:account) { build(:income_account, :with_raise) }
+
+    it 'should account for an annual raise' do
+      current = account.starting_month
+      0.upto(24) do |i|
+        account.project(current)
+        rate = (1 + account.annual_raise) ** current.year_diff(account.starting_month)
+        expect(account.gross(current)).to eq(account.annual_gross * rate / 12.0)
+        current = current.next
+      end
+    end
+
   end
 
 end

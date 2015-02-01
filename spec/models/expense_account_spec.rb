@@ -36,6 +36,7 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise) }
 
       it 'should project correct amounts' do
+        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
         current = account.starting_month.next
@@ -53,6 +54,7 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_random_months) }
 
       it 'should project correct amounts' do
+        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(19) do |i|
           coefficient = account.coefficients[current.month - 1]
@@ -69,6 +71,7 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_year_interval, :with_random_months) }
 
       it 'should project correct amounts' do
+        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(61) do |i|
           coefficient = account.coefficients[current.month - 1]
@@ -90,6 +93,7 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_annual_raise) }
 
       it 'should project correct amounts' do
+        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
         current = account.starting_month.next
@@ -108,6 +112,7 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_annual_raise, :with_year_interval, :with_random_months) }
 
       it 'should project correct amounts' do
+        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(61) do |i|
           coefficient = account.coefficients[current.month - 1]
