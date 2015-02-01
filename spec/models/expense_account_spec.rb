@@ -128,5 +128,26 @@ describe ExpenseAccount, :type => :model do
 
   end
 
+  context '#transact' do
+
+    let(:account) { build(:expense_account, starting_amount: BigDecimal.new('50')) }
+    let(:low_account) { build(:savings_account, starting_balance: account.starting_amount - 1) }
+    let(:high_account) { build(:savings_account, starting_balance: account.starting_amount + 1) }
+
+    it 'should fail when there are insufficient funds' do
+      low_account.project(account.starting_month)
+      account.scenario.savings_accounts << low_account
+      expect { account.project(account.starting_month) }.to raise_error
+    end
+
+    it 'should proceed when there are sufficient funds' do
+      high_account.project(account.starting_month)
+      account.scenario.savings_accounts << high_account
+      expect(high_account).to receive(:debit)
+      account.project(account.starting_month)
+    end
+
+  end
+
 end
 

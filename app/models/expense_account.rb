@@ -90,12 +90,13 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def debit_account(account, month, amount)
-    if account.ending_balance(month.prior) >= amount
+    starting_balance = month == account.starting_month ? account.starting_balance : account.ending_balance(month.prior)
+    if starting_balance >= amount
       account.debit(month, amount)
       0
     else
-      remaining = amount - account.ending_balance(month.prior)
-      account.debit(month, account.ending_balance(month.prior))
+      remaining = amount - starting_balance
+      account.debit(month, starting_balance)
       remaining
     end
   end

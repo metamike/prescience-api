@@ -4,7 +4,8 @@
 - Income
 - Expense Accounts
 - Raise
-TODO Connect income, expense, and savings accounts through scenario and project
+- Connect income, expense, and savings accounts through scenario and project
+TODO not happy w/ when starting_amount and starting_month are used (what if I want to reset starting amount to something else??)
 TODO One-Time Expenses
 TODO Bonuses
 TODO Recessions (no income)

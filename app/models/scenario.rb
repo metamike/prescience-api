@@ -30,13 +30,15 @@ class Scenario < ActiveRecord::Base
     @report[month] = {
       gross_income: income_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.gross(month) },
       interest: savings_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.interest(month) },
-      savings_balance: savings_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.ending_balance(month) }
+      savings_balance: savings_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.ending_balance(month) },
+      expenses: expense_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.amount(month) }
     }
   end
 
   def run_lifecycle(month)
-    income_accounts.each { |account| account.project(month) }
-    savings_accounts.each { |account| account.project(month) }
+    [income_accounts, savings_accounts, expense_accounts].each do |accounts|
+      accounts.each { |account| account.project(month) }
+    end
   end
 
   private
