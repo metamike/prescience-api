@@ -29,6 +29,10 @@ describe IncomeAccount, :type => :model do
     end
   end
 
+  it 'should return a default value for a non-projected month' do
+    expect(account.gross(account.starting_month.next)).to eq(0)
+  end
+
   it 'should use activity if present' do
     account.income_account_activities << activity
     account.project(activity.month)
@@ -66,6 +70,23 @@ describe IncomeAccount, :type => :model do
         expect(account.gross(current)).to eq(account.annual_gross * rate / 12.0)
         current = current.next
       end
+    end
+
+    it 'should begin the raise process only after historicals' do
+      current = account.starting_month
+      18.times do   # makes sure it skips a year
+        activity = build(:income_account_activity, month: current)
+        account.income_account_activities << activity
+        current = current.next
+      end
+      account.project(current)
+      expect(account.gross(current)).to eq(account.annual_gross / 12.0)
+      loop do
+        current = current.next
+        account.project(current)
+        break if current.year != account.income_account_activities.last.month.year
+      end
+      expect(account.gross(current)).to eq(account.annual_gross * (1 + account.annual_raise) / 12.0)
     end
 
   end

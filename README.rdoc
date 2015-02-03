@@ -5,22 +5,21 @@
 - Expense Accounts
 - Raise
 - Connect income, expense, and savings accounts through scenario and project
-TODO not happy w/ when starting_amount and starting_month are used (what if I want to reset starting amount to something else??)
 TODO One-Time Expenses
+TODO Travel
 TODO Bonuses
-TODO Recessions (no income)
 TODO Other Income
 TODO Mortgages
+TODO Equity
 TODO Rental Property
 TODO Sell a Property
 TODO Car
 TODO Utilities
-TODO Travel
+TODO Investment accounts (stock/bond mix & dividends)
+TODO 401(k)'s and IRAs
 TODO Scenario ancestry
 TODO Use random variables for attributes w/ uncertainty?
-TODO Equity
-TODO 401(k)'s and IRAs
-TODO Investment accounts (stock/bond mix & dividends)
+TODO Recessions (no income)
 TODO Retirement
 TODO Implement allocation strategies
 TODO Run strategies using bayesian simulations

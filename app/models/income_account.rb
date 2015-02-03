@@ -19,14 +19,14 @@ class IncomeAccount < ActiveRecord::Base
   after_initialize :init
 
   def project(month)
-    raise "Cannot calculate amount for month prior to start month" if month < starting_month
+    return if month < starting_month
     raise "Need at least one savings account to run income" unless savings_account
-    gross = @transactions[month] || annual_gross * ((1 + annual_raise) ** month.year_diff(starting_month)) / 12.0
+    gross = @transactions[month] || annual_gross * ((1 + annual_raise) ** month.year_diff(projections_start)) / 12.0
     transact(month, gross)
   end
 
   def gross(month)
-    @transactions[month]
+    @transactions.has_key?(month) ? @transactions[month] : BigDecimal.new('0')
   end
 
   private
@@ -45,6 +45,10 @@ class IncomeAccount < ActiveRecord::Base
       end
       current_month = current_month.next
     end
+  end
+
+  def projections_start
+    income_account_activities.empty? ? starting_month : income_account_activities.last.month.next
   end
 
   def transactions_from_activity(activity)

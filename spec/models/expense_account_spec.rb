@@ -29,6 +29,12 @@ describe ExpenseAccount, :type => :model do
     end
   end
 
+  let(:account) { build(:expense_account) }
+
+  it 'should return a default value for a non-projected month' do
+    expect(account.amount(account.starting_month.next)).to eq(0)
+  end
+
   context 'with monthly rate of increase' do
 
     context 'with basic account' do
@@ -80,6 +86,26 @@ describe ExpenseAccount, :type => :model do
           expect(account.amount(current)).to eq(coefficient * account.starting_amount * (1 + account.rate_of_increase) ** i)
           current = current.next
         end
+      end
+
+    end
+
+    context 'with activity' do
+
+      let(:account) { build(:expense_account, :with_raise) }
+
+      it 'should start inflating after activity' do
+        allow(account).to receive(:transact)
+        current = account.starting_month
+        18.times do   # makes sure it skips a year
+          activity = build(:expense_account_activity, month: current)
+          account.expense_account_activities << activity
+          current = current.next
+        end
+        account.project(current.prior)
+        expect(account.amount(current.prior)).to eq(account.starting_amount)
+        account.project(current)
+        expect(account.amount(current)).to eq(account.starting_amount * (1 + account.rate_of_increase))
       end
 
     end

@@ -27,7 +27,7 @@ class SavingsAccount < ActiveRecord::Base
   end
 
   def project(month)
-    raise "Cannot project for month prior to starting month" if month < starting_month
+    return if month < starting_month
     reset_month(month) unless @transactions[month]
     activity = savings_account_activities.find { |a| a.month == month }
 
@@ -45,13 +45,11 @@ class SavingsAccount < ActiveRecord::Base
   end
 
   def interest(month)
-    raise "Did not project this month" unless @transactions[month]
-    @transactions[month][:interest]
+    @transactions.has_key?(month) ? @transactions[month][:interest] : BigDecimal.new('0')
   end
 
   def ending_balance(month)
-    raise "Did not project this month" unless @transactions[month]
-    @transactions[month][:ending_balance]
+    @transactions.has_key?(month) ? @transactions[month][:ending_balance] : BigDecimal.new('0')
   end
 
   private

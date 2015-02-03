@@ -18,8 +18,7 @@ class ExpenseAccount < ActiveRecord::Base
   after_initialize :init
 
   def project(month)
-    raise "Cannot calculate amount for month prior to start month" if month < starting_month
-    return @transactions[month] if @transactions[month]
+    return if month < starting_month
 
     if year_matches(month.year) && month_matches(month.month)
       amount = (starting_amount * coefficients[month.month - 1]) * raise_coefficient(month)
@@ -31,7 +30,7 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def amount(month)
-    @transactions[month]
+    @transactions.has_key?(month) ? @transactions[month] : BigDecimal.new('0')
   end
 
   def coefficients
@@ -49,10 +48,11 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def raise_coefficient(month)
+    start_month = expense_account_activities.empty? ? starting_month : expense_account_activities.last.month
     if increase_schedule == 'monthly'
-      (1 + rate_of_increase) ** (month - starting_month)
+      (1 + rate_of_increase) ** (month - start_month)
     else
-      (1 + rate_of_increase) ** (month.year_diff(starting_month))
+      (1 + rate_of_increase) ** (month.year_diff(start_month))
     end
   end
 

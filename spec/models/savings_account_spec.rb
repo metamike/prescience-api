@@ -51,11 +51,14 @@ describe SavingsAccount, :type => :model do
   let(:credit) { Faker::Number.number(6).to_i / 100.0 }
   let(:debit) { Faker::Number.number(5).to_i / 100.0 }
 
-  it 'should fails when requesting a date before the present' do
-    expect { account.project(savings_account.starting_month.prior) }.to raise_error
+  it 'should return zeroes when requesting a date before the present' do
+    month = account.starting_month.prior
+    account.project(month)
+    expect(account.interest(month)).to eq(0)
+    expect(account.ending_balance(month)).to eq(0)
   end
 
-  it 'should use historicals if present and not require projection' do
+  it 'should use historicals if present w/o requiring projection' do
     account.savings_account_activities << activity
     expect(account.interest(activity.month)).to eq(activity.interest)
     expect(account.ending_balance(activity.month)).to eq(activity.ending_balance)

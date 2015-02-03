@@ -5,7 +5,7 @@ class CreateSavingsAccounts < ActiveRecord::Migration
       t.belongs_to :income_account, index: true
       t.string     :starting_month
       t.decimal    :starting_balance, precision: 9, scale: 2
-      t.decimal    :interest_rate,    precision: 7, scale: 4
+      t.decimal    :interest_rate,    precision: 7, scale: 6
 
       t.timestamps null: false
     end

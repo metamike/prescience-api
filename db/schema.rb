@@ -77,7 +77,7 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.integer  "income_account_id"
     t.string   "starting_month"
     t.decimal  "starting_balance",  precision: 9, scale: 2
-    t.decimal  "interest_rate",     precision: 7, scale: 4
+    t.decimal  "interest_rate",     precision: 7, scale: 6
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
   end
