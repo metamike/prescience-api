@@ -30,9 +30,16 @@ describe ExpenseAccount, :type => :model do
   end
 
   let(:account) { build(:expense_account) }
+  let(:activity) { build(:expense_account_activity, month: account.starting_month) }
 
   it 'should return a default value for a non-projected month' do
     expect(account.amount(account.starting_month.next)).to eq(0)
+  end
+
+  it 'should use activity if present' do
+    account.expense_account_activities << activity
+    account.project(activity.month)
+    expect(account.amount(activity.month)).to eq(activity.amount)
   end
 
   context 'with monthly rate of increase' do
@@ -103,7 +110,7 @@ describe ExpenseAccount, :type => :model do
           current = current.next
         end
         account.project(current.prior)
-        expect(account.amount(current.prior)).to eq(account.starting_amount)
+        expect(account.amount(current.prior)).to eq(activity.amount)
         account.project(current)
         expect(account.amount(current)).to eq(account.starting_amount * (1 + account.rate_of_increase))
       end

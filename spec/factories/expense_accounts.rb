@@ -22,6 +22,18 @@ FactoryGirl.define do
     trait :with_year_interval do
       year_interval Random.rand(2) + 2
     end
+
+    trait :for_summary_groceries do
+      name            'Groceries'
+      starting_month  Month.new(2014, 1)
+      starting_amount BigDecimal.new('1200')
+    end
+
+    trait :for_summary_entertainment do
+      name            'Entertainment'
+      starting_month  Month.new(2014, 1)
+      starting_amount BigDecimal.new('80')
+    end
   end
 
 end

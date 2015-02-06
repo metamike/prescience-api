@@ -19,6 +19,7 @@ class ExpenseAccount < ActiveRecord::Base
 
   def project(month)
     return if month < starting_month
+    return if expense_account_activities.find { |a| a.month == month }
 
     if year_matches(month.year) && month_matches(month.month)
       amount = (starting_amount * coefficients[month.month - 1]) * raise_coefficient(month)

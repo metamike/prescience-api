@@ -8,6 +8,8 @@ class Scenario < ActiveRecord::Base
 
   after_initialize :init_report
 
+  attr_reader :report
+
   # For each month, want:
   #   Gross Income
   #   Interest
