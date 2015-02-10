@@ -55,7 +55,7 @@ describe ExpenseAccount, :type => :model do
         current = account.starting_month.next
         1.upto(20) do |i|
           account.project(current)
-          expect(account.amount(current)).to eq(account.starting_amount * ((1 + account.rate_of_increase) ** i))
+          expect(account.amount(current)).to eq((account.starting_amount * ((1 + account.rate_of_increase) ** i)).round(2))
           current = current.next
         end
       end
@@ -72,7 +72,7 @@ describe ExpenseAccount, :type => :model do
         0.upto(19) do |i|
           coefficient = account.coefficients[current.month - 1]
           account.project(current)
-          expect(account.amount(current)).to eq(coefficient * account.starting_amount * (1 + account.rate_of_increase) ** i)
+          expect(account.amount(current)).to eq((coefficient * account.starting_amount * (1 + account.rate_of_increase) ** i).round(2))
           current = current.next
         end
       end
@@ -90,7 +90,7 @@ describe ExpenseAccount, :type => :model do
           coefficient = account.coefficients[current.month - 1]
           coefficient = 0 if current.year_diff(account.starting_month) % account.year_interval != 0
           account.project(current)
-          expect(account.amount(current)).to eq(coefficient * account.starting_amount * (1 + account.rate_of_increase) ** i)
+          expect(account.amount(current)).to eq((coefficient * account.starting_amount * (1 + account.rate_of_increase) ** i).round(2))
           current = current.next
         end
       end
@@ -112,7 +112,9 @@ describe ExpenseAccount, :type => :model do
         account.project(current.prior)
         expect(account.amount(current.prior)).to eq(activity.amount)
         account.project(current)
-        expect(account.amount(current)).to eq(account.starting_amount * (1 + account.rate_of_increase))
+        expect(account.amount(current)).to eq(account.starting_amount)
+        account.project(current.next)
+        expect(account.amount(current.next)).to eq((account.starting_amount * (1 + account.rate_of_increase)).round(2))
       end
 
     end
@@ -133,7 +135,7 @@ describe ExpenseAccount, :type => :model do
         1.upto(25) do |i|
           account.project(current)
           rate = (1 + account.rate_of_increase) ** current.year_diff(account.starting_month)
-          expect(account.amount(current)).to eq(account.starting_amount * rate)
+          expect(account.amount(current)).to eq((account.starting_amount * rate).round(2))
           current = current.next
         end
       end
@@ -152,7 +154,7 @@ describe ExpenseAccount, :type => :model do
           coefficient = 0 if current.year_diff(account.starting_month) % account.year_interval != 0
           rate = (1 + account.rate_of_increase) ** current.year_diff(account.starting_month)
           account.project(current)
-          expect(account.amount(current)).to eq(coefficient * account.starting_amount * rate)
+          expect(account.amount(current)).to eq((coefficient * account.starting_amount * rate).round(2))
           current = current.next
         end
       end

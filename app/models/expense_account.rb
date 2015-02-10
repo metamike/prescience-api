@@ -26,6 +26,7 @@ class ExpenseAccount < ActiveRecord::Base
     else
       amount = BigDecimal.new('0')
     end
+    amount = amount.round(2)
     transact(month, amount)
     @transactions[month] = amount
   end
@@ -49,7 +50,7 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def raise_coefficient(month)
-    start_month = expense_account_activities.empty? ? starting_month : expense_account_activities.last.month
+    start_month = expense_account_activities.empty? ? starting_month : expense_account_activities.last.month.next
     if increase_schedule == 'monthly'
       (1 + rate_of_increase) ** (month - start_month)
     else

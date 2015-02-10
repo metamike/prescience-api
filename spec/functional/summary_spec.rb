@@ -30,15 +30,38 @@ describe 'Prescience Backend' do
     entertainment.expense_account_activities << entertainment_activity
     scenario.expense_accounts += [groceries, entertainment]
     month = Month.new(2014, 1)
-    scenario.project(month)
-    report = scenario.report
-    expect(report.length).to eq(1)
-    expect(report[month]).to eq({
-      gross_income:    BigDecimal.new('22833.33'),
-      interest:        BigDecimal.new('2.66'),
-      savings_balance: BigDecimal.new('59020.80'),
-      expenses:        BigDecimal.new('1211.50')
-    })
+    expectation_data = [
+      [22833.33, 1211.50, 59020.80, 2.66],
+      [23333.33, 1280.00, 81078.53, 4.40],
+      [23333.33, 1283.00, 103134.50, 5.64],
+      [23333.33, 1286.01, 125188.70, 6.88],
+      [23333.33, 1289.02, 147241.14, 8.13],
+      [23333.33, 1292.05, 169291.79, 9.37],
+      [23333.33, 1295.08, 191340.65, 10.61],
+      [23333.33, 1298.11, 213387.72, 11.85],
+      [23333.33, 1301.16, 235432.98, 13.09],
+      [23333.33, 1304.21, 257476.43, 14.33],
+      [23333.33, 1307.27, 279518.06, 15.57],
+      [23333.33, 1310.34, 301557.87, 16.82],
+      [24056.67, 1313.42, 324319.22, 18.09]
+    ]
+    expectation = {}
+    expectation_data.each do |row|
+      expectation[month] = {
+        gross_income:    BigDecimal.new(row[0].to_s),
+        interest:        BigDecimal.new(row[3].to_s),
+        savings_balance: BigDecimal.new(row[2].to_s),
+        expenses:        BigDecimal.new(row[1].to_s)
+      }
+      month = month.next
+    end
+    current = Month.new(2014, 1)
+    loop do
+      scenario.project(current)
+      expect(scenario.report[current]).to eq(expectation[current])
+      current = current.next
+      break if current == Month.new(2015, 1)
+    end
  end
 
 end

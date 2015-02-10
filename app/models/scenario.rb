@@ -38,7 +38,7 @@ class Scenario < ActiveRecord::Base
   end
 
   def run_lifecycle(month)
-    [income_accounts, savings_accounts, expense_accounts].each do |accounts|
+    [income_accounts, expense_accounts, savings_accounts].each do |accounts|
       accounts.each { |account| account.project(month) }
     end
   end

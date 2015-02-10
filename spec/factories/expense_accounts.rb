@@ -24,9 +24,10 @@ FactoryGirl.define do
     end
 
     trait :for_summary_groceries do
-      name            'Groceries'
-      starting_month  Month.new(2014, 1)
-      starting_amount BigDecimal.new('1200')
+      name             'Groceries'
+      starting_month   Month.new(2014, 1)
+      starting_amount  BigDecimal.new('1200')
+      rate_of_increase BigDecimal.new('0.0025')
     end
 
     trait :for_summary_entertainment do

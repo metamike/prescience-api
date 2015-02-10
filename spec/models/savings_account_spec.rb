@@ -68,7 +68,7 @@ describe SavingsAccount, :type => :model do
     account.savings_account_activities << activity
     month = activity.month.next
     account.project(month)
-    expect(account.interest(month)).to eq(activity.ending_balance * account.interest_rate)
+    expect(account.interest(month)).to eq((activity.ending_balance * account.interest_rate).round(2))
     expect(account.ending_balance(month)).to eq(activity.ending_balance + account.interest(month))
   end
 
@@ -77,7 +77,7 @@ describe SavingsAccount, :type => :model do
     account.project(activity.month.next)
     month = activity.month.next.next
     account.project(month)
-    expect(account.interest(month)).to eq((activity.ending_balance * (1 + account.interest_rate)) * account.interest_rate)
+    expect(account.interest(month)).to eq(((activity.ending_balance * (1 + account.interest_rate)) * account.interest_rate).round(2))
     expect(account.ending_balance(month)).to eq(account.ending_balance(activity.month.next) + account.interest(month))
   end
 
@@ -86,7 +86,7 @@ describe SavingsAccount, :type => :model do
     account.debit(account.starting_month, debit)
     account.project(account.starting_month)
     expect(account.interest(account.starting_month)).to eq(
-      (account.starting_balance + credit - debit) * account.interest_rate
+      ((account.starting_balance + credit - debit) * account.interest_rate).round(2)
     )
     expect(account.ending_balance(account.starting_month)).to eq(
       account.starting_balance + credit - debit + account.interest(account.starting_month)

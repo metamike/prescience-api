@@ -55,7 +55,7 @@ class SavingsAccount < ActiveRecord::Base
   private
 
   def calc_interest(starting_balance, tracker)
-    (starting_balance + tracker[:credits] - tracker[:debits]) * interest_rate
+    ((starting_balance + tracker[:credits] - tracker[:debits]) * interest_rate).round(2)
   end
 
   def calc_balance(starting_balance, tracker)

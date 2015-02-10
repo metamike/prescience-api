@@ -22,6 +22,7 @@ class IncomeAccount < ActiveRecord::Base
     return if month < starting_month
     raise "Need at least one savings account to run income" unless savings_account
     gross = @transactions[month] || annual_gross * ((1 + annual_raise) ** month.year_diff(projections_start)) / 12.0
+    gross = gross.round(2)
     transact(month, gross)
   end
 
