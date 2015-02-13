@@ -39,6 +39,10 @@ class Month
     end
   end
 
+  def prior_year
+    year - 1
+  end
+
   def ==(other)
     return false unless other
     @year == other.year && @month == other.month

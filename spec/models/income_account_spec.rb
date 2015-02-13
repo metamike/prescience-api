@@ -91,5 +91,30 @@ describe IncomeAccount, :type => :model do
 
   end
 
+  context 'with uncertain raise' do
+
+    let(:account) { build(:income_account, :uncertain, starting_month: Month.new(2014, 11)) }
+    let(:rand_values) { [0.6406128959171591] }
+
+    it 'should sample from a normal distribution to determine raises' do
+      allow(account.annual_raise_dist).to receive(:rng).and_return(*rand_values)
+      month = account.starting_month
+      account.project(month)
+      expect(account.gross(month)).to eq((account.annual_gross / 12.0).round(2))
+      month = month.next
+      account.project(month)
+      expect(account.gross(month)).to eq((account.annual_gross / 12.0).round(2))
+      expect(account.raise(month)).to eq(0)
+      month = month.next
+      account.project(month)
+      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_gross / 12.0).round(2))
+      month = month.next
+      account.project(month)
+      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_gross / 12.0).round(2))
+      expect(account.raise(month)).to eq(rand_values[0])
+    end
+
+  end
+
 end
 

@@ -11,6 +11,12 @@ FactoryGirl.define do
       annual_raise Faker::Number.number(3).to_i / 1000.0
     end
 
+    trait :uncertain do
+      annual_raise_uncertain true
+      annual_raise_mean      0.05
+      annual_raise_stdev     0.03
+    end
+
     trait :for_summary_low do
       name           'Lower Income'
       starting_month Month.new(2014, 1)
