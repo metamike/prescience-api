@@ -55,7 +55,7 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.integer  "scenario_id"
     t.string   "name"
     t.string   "starting_month"
-    t.decimal  "annual_gross",   precision: 8, scale: 2
+    t.decimal  "annual_salary",  precision: 8, scale: 2
     t.string   "annual_raise"
     t.datetime "created_at",                             null: false
     t.datetime "updated_at",                             null: false

@@ -5,7 +5,7 @@ class CreateIncomeAccounts < ActiveRecord::Migration
 
       t.string     :name
       t.string     :starting_month
-      t.decimal    :annual_gross, precision: 8, scale: 2
+      t.decimal    :annual_salary, precision: 8, scale: 2
 
       t.string     :annual_raise
 

@@ -2,17 +2,18 @@ require 'rails_helper'
 
 describe IncomeAccount, :type => :model do
 
-  let(:account) { build(:income_account) }
-  let(:activity) { build(:income_account_activity, month: account.starting_month, income_account: account) }
+  let(:savings) { mock_model(SavingsAccount, :[]= => nil) }
+  let(:account) { build(:income_account, savings_account: savings) }
+  let(:activity) { build(:income_account_activity, month: account.starting_month) }
 
   context 'validations' do
     it { should validate_presence_of(:name) }
     it { should validate_presence_of(:starting_month) }
-    it { should validate_presence_of(:annual_gross) }
-    it { should validate_numericality_of(:annual_gross) }
+    it { should validate_presence_of(:annual_salary) }
+    it { should validate_numericality_of(:annual_salary) }
 
-    let(:activity_good) { build(:income_account_activity, month: activity.month.next, income_account: account) }
-    let(:activity_bad) { build(:income_account_activity, month: activity.month.next.next, income_account: account) }
+    let(:activity_good) { build(:income_account_activity, month: activity.month.next) }
+    let(:activity_bad) { build(:income_account_activity, month: activity.month.next.next) }
 
     it 'should fail if activities are out of order' do
       account.income_account_activities << activity
@@ -33,28 +34,16 @@ describe IncomeAccount, :type => :model do
   end
 
   it 'should use activity if present' do
+    expect(savings).to receive(:credit).with(activity.month, activity.gross)
     account.income_account_activities << activity
     account.project(activity.month)
     expect(account.gross(activity.month)).to eq(activity.gross)
-    account.savings_account.project(activity.month)
-    expect(account.savings_account.interest(activity.month)).to eq(
-      ((account.savings_account.starting_balance + activity.gross) * account.savings_account.interest_rate).round(2)
-    )
-    expect(account.savings_account.ending_balance(activity.month)).to eq(
-      account.savings_account.starting_balance + activity.gross + account.savings_account.interest(activity.month)
-    )
   end
 
   it 'should calculate when it has no activity' do
+    expect(savings).to receive(:credit).with(account.starting_month, (account.annual_salary / 12.0).round(2))
     account.project(account.starting_month)
-    expect(account.gross(account.starting_month)).to eq((account.annual_gross / 12.0).round(2))
-    account.savings_account.project(account.starting_month)
-    expect(account.savings_account.interest(account.starting_month)).to eq(
-      ((account.savings_account.starting_balance + account.annual_gross / 12.0) * account.savings_account.interest_rate).round(2)
-    )
-    expect(account.savings_account.ending_balance(account.starting_month)).to eq(
-      (account.savings_account.starting_balance + account.annual_gross / 12.0 + account.savings_account.interest(account.starting_month)).round(2)
-    )
+    expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
   end
 
   context 'with annual raise' do
@@ -66,7 +55,7 @@ describe IncomeAccount, :type => :model do
       0.upto(24) do |i|
         account.project(current)
         rate = (1 + account.annual_raise.mean) ** current.year_diff(account.starting_month)
-        expect(account.gross(current)).to eq((account.annual_gross * rate / 12.0).round(2))
+        expect(account.gross(current)).to eq((account.annual_salary * rate / 12.0).round(2))
         current = current.next
       end
     end
@@ -79,13 +68,13 @@ describe IncomeAccount, :type => :model do
         current = current.next
       end
       account.project(current)
-      expect(account.gross(current)).to eq((account.annual_gross / 12.0).round(2))
+      expect(account.gross(current)).to eq((account.annual_salary / 12.0).round(2))
       loop do
         current = current.next
         account.project(current)
         break if current.year != account.income_account_activities.last.month.year
       end
-      expect(account.gross(current)).to eq((account.annual_gross * (1 + account.annual_raise.mean) / 12.0).round(2))
+      expect(account.gross(current)).to eq((account.annual_salary * (1 + account.annual_raise.mean) / 12.0).round(2))
     end
 
   end
@@ -99,11 +88,11 @@ describe IncomeAccount, :type => :model do
       allow(account.annual_raise).to receive(:sample).and_return(*rand_values)
       month = account.starting_month
       account.project(month)
-      expect(account.gross(month)).to eq((account.annual_gross / 12.0).round(2))
+      expect(account.gross(month)).to eq((account.annual_salary / 12.0).round(2))
       expect(account.raise(month)).to eq(0)
       month = month.next
       account.project(month)
-      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_gross / 12.0).round(2))
+      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_salary / 12.0).round(2))
       expect(account.raise(month)).to eq(rand_values[0])
     end
 
