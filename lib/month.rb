@@ -3,9 +3,10 @@ class Month
 
   attr_accessor :year, :month
 
-  def initialize(year, month)
-    @year = year
-    @month = month
+  def initialize(year = nil, month = nil)
+    today = Time.zone.now
+    @year = year || today.year
+    @month = month || today.month
   end
 
   def self.parse(string)
@@ -68,6 +69,19 @@ class Month
 
   def to_s
     "#{'%04d' % year}-#{'%02d' % month}"
+  end
+
+  # Serialization methods
+
+  def self.dump(value)
+    return nil unless value
+    {'year' => value.year, 'month' => value.month}.to_json
+  end
+
+  def self.load(value)
+    return nil unless value
+    json = JSON.load(value)
+    Month.new(json['year'], json['month'])
   end
 
 end

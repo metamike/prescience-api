@@ -31,11 +31,8 @@ class RandomVariable
 
   def self.load(value)
     return nil unless value
-    object = RandomVariable.new
-    JSON.load(value).each do |var, val|
-      object.send("#{var}=", val)
-    end
-    object
+    json = JSON.load(value)
+    RandomVariable.new(json['mean'], json['stdev'])
   end
 
   private

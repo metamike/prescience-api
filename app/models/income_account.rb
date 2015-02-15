@@ -7,7 +7,7 @@ class IncomeAccount < ActiveRecord::Base
   has_many :income_account_activities, -> { order(:month) },
                                        after_add: :transactions_from_activity
 
-  serialize :starting_month
+  serialize :starting_month, Month
   serialize :annual_raise, RandomVariable
 
   validates :name, presence: true
