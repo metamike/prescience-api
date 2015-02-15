@@ -22,17 +22,20 @@ class RandomVariable
     @stdev == 0 ? @mean : @dist.rng
   end
 
-  def to_json
-    debugger
-    {'mean' => @mean, 'stdev' => @stdev}.to_json
+  # Serialization methods
+
+  def self.dump(value)
+    return nil unless value
+    {'mean' => value.mean, 'stdev' => value.stdev}.to_json
   end
 
-  def from_json!(string)
-    debugger
-    JSON.load(string).each do |var, val|
-      self.instance_variable_set(var, val)
+  def self.load(value)
+    return nil unless value
+    object = RandomVariable.new
+    JSON.load(value).each do |var, val|
+      object.send("#{var}=", val)
     end
-    init_dist
+    object
   end
 
   private

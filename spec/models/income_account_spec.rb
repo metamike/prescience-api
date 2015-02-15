@@ -10,7 +10,6 @@ describe IncomeAccount, :type => :model do
     it { should validate_presence_of(:starting_month) }
     it { should validate_presence_of(:annual_gross) }
     it { should validate_numericality_of(:annual_gross) }
-    it { should validate_numericality_of(:annual_raise) }
 
     let(:activity_good) { build(:income_account_activity, month: activity.month.next, income_account: account) }
     let(:activity_bad) { build(:income_account_activity, month: activity.month.next.next, income_account: account) }
@@ -66,7 +65,7 @@ describe IncomeAccount, :type => :model do
       current = account.starting_month
       0.upto(24) do |i|
         account.project(current)
-        rate = (1 + account.annual_raise) ** current.year_diff(account.starting_month)
+        rate = (1 + account.annual_raise.mean) ** current.year_diff(account.starting_month)
         expect(account.gross(current)).to eq((account.annual_gross * rate / 12.0).round(2))
         current = current.next
       end
@@ -86,28 +85,22 @@ describe IncomeAccount, :type => :model do
         account.project(current)
         break if current.year != account.income_account_activities.last.month.year
       end
-      expect(account.gross(current)).to eq((account.annual_gross * (1 + account.annual_raise) / 12.0).round(2))
+      expect(account.gross(current)).to eq((account.annual_gross * (1 + account.annual_raise.mean) / 12.0).round(2))
     end
 
   end
 
   context 'with uncertain raise' do
 
-    let(:account) { build(:income_account, :uncertain, starting_month: Month.new(2014, 11)) }
-    let(:rand_values) { [0.6406128959171591] }
+    let(:account) { build(:income_account, :uncertain_raise, starting_month: Month.new(2014, 12)) }
+    let(:rand_values) { [0.00904441996412765] }
 
     it 'should sample from a normal distribution to determine raises' do
-      allow(account.annual_raise_dist).to receive(:rng).and_return(*rand_values)
+      allow(account.annual_raise).to receive(:sample).and_return(*rand_values)
       month = account.starting_month
       account.project(month)
       expect(account.gross(month)).to eq((account.annual_gross / 12.0).round(2))
-      month = month.next
-      account.project(month)
-      expect(account.gross(month)).to eq((account.annual_gross / 12.0).round(2))
       expect(account.raise(month)).to eq(0)
-      month = month.next
-      account.project(month)
-      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_gross / 12.0).round(2))
       month = month.next
       account.project(month)
       expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_gross / 12.0).round(2))

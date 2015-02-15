@@ -1,5 +1,4 @@
 require 'rails_helper'
-require './lib/month'
 
 describe Month do
 

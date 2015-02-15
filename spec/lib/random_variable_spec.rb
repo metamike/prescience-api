@@ -36,4 +36,42 @@ describe RandomVariable do
 
   end
 
+  describe '.dump' do
+
+    context 'with nil' do
+      it 'should not break' do
+        expect(RandomVariable.dump(nil)).to be_nil
+      end
+    end
+
+    context 'with a random variable' do
+      let(:var) { build(:random_variable) }
+      it 'should produce JSON output' do
+        serialized = RandomVariable.dump(var)
+        json = JSON.load(serialized)
+        expect(json).to eq({'mean' => var.mean, 'stdev' => var.stdev})
+      end
+    end
+
+  end
+
+  describe 'load' do
+
+    context 'with nil' do
+      it 'should not break' do
+        expect(RandomVariable.load(nil)).to be_nil
+      end
+    end
+
+    context 'with a JSON hash' do
+      let(:hash) { {'mean' => 50.55, 'stdev' => 33.3333} }
+      it 'should create a RandomVariable' do
+        var = RandomVariable.load(hash.to_json)
+        expect(var.mean).to eq(hash['mean'])
+        expect(var.stdev).to eq(hash['stdev'])
+      end
+    end
+
+  end
+
 end

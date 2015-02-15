@@ -8,27 +8,25 @@ FactoryGirl.define do
     scenario
 
     trait :with_raise do
-      annual_raise Faker::Number.number(3).to_i / 1000.0
+      annual_raise { build(:random_variable, :no_stdev) }
     end
 
-    trait :uncertain do
-      annual_raise_uncertain true
-      annual_raise_mean      0.05
-      annual_raise_stdev     0.03
+    trait :uncertain_raise do
+      annual_raise { build(:random_variable, mean: 0.05, stdev: 0.03) }
     end
 
     trait :for_summary_low do
       name           'Lower Income'
       starting_month Month.new(2014, 1)
       annual_gross   BigDecimal.new('120000')
-      annual_raise   BigDecimal.new('0.035')
+      annual_raise   { build(:random_variable, :no_stdev, mean: 0.035) }
     end
 
     trait :for_summary_high do
       name           'Higher Income'
       starting_month Month.new(2014, 1)
       annual_gross   BigDecimal.new('160000')
-      annual_raise   BigDecimal.new('0.028')
+      annual_raise   { build(:random_variable, :no_stdev, mean: 0.028) }
     end
   end
 

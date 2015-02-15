@@ -8,7 +8,7 @@ class IncomeAccount < ActiveRecord::Base
                                        after_add: :transactions_from_activity
 
   serialize :starting_month
-  serialize :annual_raise, JSON
+  serialize :annual_raise, RandomVariable
 
   validates :name, presence: true
   validates :starting_month, presence: true
@@ -34,17 +34,13 @@ class IncomeAccount < ActiveRecord::Base
     @annual_raises[month.year] || 0
   end
 
-  def annual_raise_dist
-    @annual_raise_dist ||= Rubystats::NormalDistribution.new(self.annual_raise_mean, self.annual_raise_stdev)
-  end
-
   private
 
   def init
     @transactions = {}
     @annual_raises = {}
     @annual_grosses = {}
-    self.annual_raise ||= RandomVariable.new
+    self.annual_raise ||= RandomVariable.new(0)
   end
 
   def calc_gross(month)
@@ -57,7 +53,7 @@ class IncomeAccount < ActiveRecord::Base
 
   def calc_raise(year)
     return 0 if year <= projections_start.year
-    @annual_raises[year] ||= annual_raise_uncertain ? annual_raise_dist.rng : annual_raise
+    @annual_raises[year] ||= annual_raise.sample
   end
 
   def activities_must_be_in_sequence
