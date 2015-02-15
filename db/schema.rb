@@ -55,13 +55,10 @@ ActiveRecord::Schema.define(version: 20150212025536) do
     t.integer  "scenario_id"
     t.string   "name"
     t.string   "starting_month"
-    t.decimal  "annual_gross",           precision: 8, scale: 2
-    t.decimal  "annual_raise",           precision: 3, scale: 3
-    t.datetime "created_at",                                     null: false
-    t.datetime "updated_at",                                     null: false
-    t.boolean  "annual_raise_uncertain"
-    t.decimal  "annual_raise_mean",      precision: 3, scale: 3
-    t.decimal  "annual_raise_stdev",     precision: 3, scale: 3
+    t.decimal  "annual_gross",   precision: 8, scale: 2
+    t.string   "annual_raise"
+    t.datetime "created_at",                             null: false
+    t.datetime "updated_at",                             null: false
   end
 
   create_table "savings_account_activities", force: :cascade do |t|

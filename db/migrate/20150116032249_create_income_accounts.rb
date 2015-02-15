@@ -7,10 +7,7 @@ class CreateIncomeAccounts < ActiveRecord::Migration
       t.string     :starting_month
       t.decimal    :annual_gross, precision: 8, scale: 2
 
-      t.decimal    :annual_raise, precision: 3, scale: 3   # default: 0
-      t.boolean    :annual_raise_uncertain   # default: false
-      t.decimal    :annual_raise_mean,  precision: 3, scale: 3
-      t.decimal    :annual_raise_stdev, precision: 3, scale: 3
+      t.string     :annual_raise
 
       t.timestamps null: false
     end

@@ -8,13 +8,11 @@ class IncomeAccount < ActiveRecord::Base
                                        after_add: :transactions_from_activity
 
   serialize :starting_month
+  serialize :annual_raise, JSON
 
   validates :name, presence: true
   validates :starting_month, presence: true
   validates :annual_gross, presence: true, numericality: true
-  validates :annual_raise, numericality: true
-  # validates :annual_raise_mean, numericality: true
-  # validates :annual_raise_stdev, numericality: true
 
   validate :activities_must_be_in_sequence
 
@@ -46,7 +44,7 @@ class IncomeAccount < ActiveRecord::Base
     @transactions = {}
     @annual_raises = {}
     @annual_grosses = {}
-    self.annual_raise ||= BigDecimal.new('0')
+    self.annual_raise ||= RandomVariable.new
   end
 
   def calc_gross(month)
