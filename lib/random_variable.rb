@@ -1,5 +1,6 @@
 # Normally-distributed random variable
 class RandomVariable
+  include Comparable
 
   attr_reader :mean, :stdev
 
@@ -20,6 +21,11 @@ class RandomVariable
 
   def sample
     @stdev == 0 ? @mean : @dist.rng
+  end
+
+  def <=>(other)
+    return nil unless other
+    @mean <=> other.mean
   end
 
   # Serialization methods

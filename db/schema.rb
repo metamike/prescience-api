@@ -76,10 +76,10 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.integer  "scenario_id"
     t.integer  "income_account_id"
     t.string   "starting_month"
-    t.decimal  "starting_balance",  precision: 9, scale: 2
-    t.decimal  "interest_rate",     precision: 7, scale: 6
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
+    t.decimal  "starting_balance",      precision: 9, scale: 2
+    t.string   "monthly_interest_rate"
+    t.datetime "created_at",                                    null: false
+    t.datetime "updated_at",                                    null: false
   end
 
   add_index "savings_accounts", ["income_account_id"], name: "index_savings_accounts_on_income_account_id", using: :btree

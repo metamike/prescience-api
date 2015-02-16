@@ -74,4 +74,34 @@ describe RandomVariable do
 
   end
 
+  describe '#<=>' do
+    let(:var) { build(:random_variable) }
+
+    context 'with nil' do
+      it 'should not break' do
+        expect(var <=> nil).to be_nil
+      end
+    end
+
+    context 'with a lesser var' do
+      let(:other) { build(:random_variable, mean: var.mean - 1) }
+      it 'should return a positive value' do
+        expect(var <=> other).to be > 0
+      end
+    end
+
+    context 'with a greater var' do
+      let(:other) { build(:random_variable, mean: var.mean + 1) }
+      it 'should return a negative value' do
+        expect(var <=> other).to be < 0
+      end
+    end
+
+    context 'with the same mean' do
+      it 'should return 0' do
+        expect(var <=> var).to eq(0)
+      end
+    end
+  end
+
 end

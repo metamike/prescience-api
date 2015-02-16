@@ -82,7 +82,7 @@ describe IncomeAccount, :type => :model do
   context 'with uncertain raise' do
 
     let(:account) { build(:income_account, :uncertain_raise, starting_month: Month.new(2014, 12)) }
-    let(:rand_values) { [0.00904441996412765] }
+    let(:rand_values) { [0.0007575949881074517, -0.0001] }
 
     it 'should sample from a normal distribution to determine raises' do
       allow(account.annual_raise).to receive(:sample).and_return(*rand_values)
