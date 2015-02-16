@@ -33,7 +33,8 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.decimal  "starting_amount",    precision: 9, scale: 2
     t.integer  "year_interval"
     t.string   "month_coefficients"
-    t.decimal  "rate_of_increase",   precision: 4, scale: 3
+    t.decimal  "stdev_coefficient",  precision: 4, scale: 3
+    t.string   "rate_of_increase"
     t.string   "increase_schedule"
     t.datetime "created_at",                                 null: false
     t.datetime "updated_at",                                 null: false

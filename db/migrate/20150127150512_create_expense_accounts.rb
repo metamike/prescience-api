@@ -5,10 +5,11 @@ class CreateExpenseAccounts < ActiveRecord::Migration
 
       t.string  :name
       t.string  :starting_month
-      t.decimal :starting_amount, precision: 9, scale: 2
+      t.decimal :starting_amount,   precision: 9, scale: 2  #9,999,999.99
       t.integer :year_interval   # default: 1
       t.string  :month_coefficients   # default: 1,1,..,1
-      t.decimal :rate_of_increase, precision: 4, scale: 3   # default: 0
+      t.decimal :stdev_coefficient, precision: 4, scale: 3   # default: 0
+      t.string  :rate_of_increase   # default: 0
       t.string  :increase_schedule   # default: monthly
 
       t.timestamps null: false

@@ -3,14 +3,16 @@ class ExpenseAccount < ActiveRecord::Base
   belongs_to :scenario
 
   has_many :expense_account_activities, -> { order(:month) },
-                                        after_add: :transactions_from_activity
+                                        after_add: :build_transaction_from_activity
 
-  serialize :starting_month
+  serialize :starting_month, Month
   serialize :month_coefficents
+  serialize :rate_of_increase, RandomVariable
 
   validates :name, presence: true
   validates :starting_month, presence: true
   validates :starting_amount, presence: true, numericality: true
+  validates :stdev_coefficient, numericality: true
   validates :increase_schedule, inclusion: { in: %w(monthly yearly) }
 
   validate :activities_must_be_in_sequence
@@ -21,12 +23,12 @@ class ExpenseAccount < ActiveRecord::Base
     return if month < starting_month
     return if expense_account_activities.find { |a| a.month == month }
 
+    raise_coefficient(month)
     if year_matches(month.year) && month_matches(month.month)
-      amount = (starting_amount * coefficients[month.month - 1]) * raise_coefficient(month)
+      amount = (month_base(month) * raise_coefficient(month)).round(2)
     else
       amount = BigDecimal.new('0')
     end
-    amount = amount.round(2)
     transact(month, amount)
     @transactions[month] = amount
   end
@@ -49,21 +51,37 @@ class ExpenseAccount < ActiveRecord::Base
     coefficients[month - 1] != 0
   end
 
+  def month_base(month)
+    amount = coefficients[month.month - 1] * starting_amount
+    RandomVariable.new(amount, amount * stdev_coefficient).sample
+  end
+
   def raise_coefficient(month)
-    start_month = expense_account_activities.empty? ? starting_month : expense_account_activities.last.month.next
     if increase_schedule == 'monthly'
-      (1 + rate_of_increase) ** (month - start_month)
+      return @rates_of_increase[month] if @rates_of_increase[month]
+      if month == projections_start
+        @rates_of_increase[month] = 1
+      else
+        @rates_of_increase[month] = (1 + rate_of_increase.sample) * (@rates_of_increase[month.prior] || 1)
+      end
     else
-      (1 + rate_of_increase) ** (month.year_diff(start_month))
+      return @rates_of_increase[month.year] if @rates_of_increase[month.year]
+      if month.year == projections_start.year
+        @rates_of_increase[month.year] = 1
+      else
+        @rates_of_increase[month.year] = (1 + rate_of_increase.sample) * (@rates_of_increase[month.prior_year] || 1)
+      end
     end
   end
 
   def init
     @transactions = {}
+    @rates_of_increase = {}
     self.year_interval ||= 1
-    self.rate_of_increase ||= 0
+    self.rate_of_increase ||= RandomVariable.new(0)
     self.increase_schedule ||= 'monthly'
     self.month_coefficients ||= 12.times.map { 1 }
+    self.stdev_coefficient ||= 0
   end
 
   def activities_must_be_in_sequence
@@ -77,8 +95,12 @@ class ExpenseAccount < ActiveRecord::Base
     end
   end
 
-  def transactions_from_activity(activity)
+  def build_transaction_from_activity(activity)
     @transactions[activity.month] = activity.amount
+  end
+
+  def projections_start
+    expense_account_activities.empty? ? starting_month : expense_account_activities.last.month.next
   end
 
   def transact(month, amount)

@@ -7,16 +7,16 @@ FactoryGirl.define do
     scenario
 
     trait :with_raise do
-      rate_of_increase Faker::Number.number(2).to_i / 12000.0
+      rate_of_increase { build(:random_variable, :no_stdev, mean: Faker::Number.number(2).to_i / 12000.0) }
     end
 
     trait :with_annual_raise do
-      rate_of_increase Faker::Number.number(2).to_i / 12000.0
+      rate_of_increase  { build(:random_variable, :no_stdev, mean: Faker::Number.number(2).to_i / 12000.0) }
       increase_schedule 'yearly'
     end
 
     trait :with_random_months do
-      month_coefficients 12.times.map { Random.rand(4) / 2.0 }
+      month_coefficients { 12.times.map { Random.rand(4) / 2.0 } }
     end
 
     trait :with_year_interval do
@@ -27,7 +27,7 @@ FactoryGirl.define do
       name             'Groceries'
       starting_month   Month.new(2014, 1)
       starting_amount  BigDecimal.new('1200')
-      rate_of_increase BigDecimal.new('0.0025')
+      rate_of_increase { build(:random_variable, :no_stdev, mean: 0.0025) }
     end
 
     trait :for_summary_entertainment do
