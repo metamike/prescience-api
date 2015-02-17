@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150127150512) do
+ActiveRecord::Schema.define(version: 20150217025048) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -62,6 +62,18 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.datetime "updated_at",                             null: false
   end
 
+  create_table "mutual_funds", force: :cascade do |t|
+    t.integer  "scenario_id"
+    t.string   "name"
+    t.string   "starting_month"
+    t.decimal  "starting_balance", precision: 10, scale: 2
+    t.string   "interest_rate"
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+  end
+
+  add_index "mutual_funds", ["scenario_id"], name: "index_mutual_funds_on_scenario_id", using: :btree
+
   create_table "savings_account_activities", force: :cascade do |t|
     t.integer  "savings_account_id"
     t.string   "month"
@@ -90,5 +102,18 @@ ActiveRecord::Schema.define(version: 20150127150512) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  create_table "stock_activities", force: :cascade do |t|
+    t.integer  "mutual_fund_id"
+    t.string   "month"
+    t.decimal  "bought",         precision: 10, scale: 2
+    t.decimal  "sold",           precision: 10, scale: 2
+    t.decimal  "performance",    precision: 9,  scale: 2
+    t.decimal  "dividends",      precision: 8,  scale: 2
+    t.datetime "created_at",                              null: false
+    t.datetime "updated_at",                              null: false
+  end
+
+  add_index "stock_activities", ["mutual_fund_id"], name: "index_stock_activities_on_mutual_fund_id", using: :btree
 
 end

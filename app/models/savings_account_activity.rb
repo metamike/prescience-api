@@ -2,7 +2,7 @@ class SavingsAccountActivity < ActiveRecord::Base
 
   belongs_to :savings_account
 
-  serialize :month
+  serialize :month, Month
 
   validates :month, presence: true
   validates :interest, presence: true, numericality: true

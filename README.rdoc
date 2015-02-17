@@ -5,6 +5,8 @@
 - Expense Accounts
 - Raise
 - Connect income, expense, and savings accounts through scenario and project
+- Use random variables for attributes w/ uncertainty?
+TODO Investment accounts (stock/bond mix & dividends)
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses
@@ -15,10 +17,8 @@ TODO Rental Property
 TODO Sell a Property
 TODO Car
 TODO Utilities
-TODO Investment accounts (stock/bond mix & dividends)
 TODO 401(k)'s and IRAs
 TODO Scenario ancestry
-TODO Use random variables for attributes w/ uncertainty?
 TODO Recessions (no income)
 TODO Retirement
 TODO Implement allocation strategies
