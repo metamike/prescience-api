@@ -10,9 +10,16 @@ FactoryGirl.define do
       rate_of_increase { build(:random_variable, :no_stdev, mean: Faker::Number.number(2).to_i / 12000.0) }
     end
 
+    trait :with_uncertain_raise do
+      rate_of_increase { build(:random_variable, mean: Faker::Number.number(2).to_i / 100.0) }
+    end
+
     trait :with_annual_raise do
-      rate_of_increase  { build(:random_variable, :no_stdev, mean: Faker::Number.number(2).to_i / 12000.0) }
       increase_schedule 'yearly'
+    end
+
+    trait :with_uncertainty do
+      stdev_coefficient { starting_amount / 2 }
     end
 
     trait :with_random_months do

@@ -126,7 +126,7 @@ describe ExpenseAccount, :type => :model do
  
     context 'with basic account' do
 
-      let(:account) { build(:expense_account, :with_annual_raise) }
+      let(:account) { build(:expense_account, :with_raise, :with_annual_raise) }
 
       it 'should project correct amounts' do
         allow(account).to receive(:transact)
@@ -145,7 +145,7 @@ describe ExpenseAccount, :type => :model do
 
     context 'with multi-annual account' do
 
-      let(:account) { build(:expense_account, :with_annual_raise, :with_year_interval, :with_random_months) }
+      let(:account) { build(:expense_account, :with_raise, :with_annual_raise, :with_year_interval, :with_random_months) }
 
       it 'should project correct amounts' do
         allow(account).to receive(:transact)
@@ -160,6 +160,65 @@ describe ExpenseAccount, :type => :model do
         end
       end
 
+    end
+
+  end
+
+  context 'with random rate of increase' do
+
+    context 'monthly' do
+      let(:account) { build(:expense_account, :with_uncertain_raise) }
+      let(:rand_values) { [0.0233, -0.099] }
+      it 'should project correct amounts' do
+        allow(account).to receive(:transact)
+        account.project(account.starting_month)
+        expect(account.amount(account.starting_month)).to eq(account.starting_amount)
+  
+        month = account.starting_month.next
+        allow(account.rate_of_increase).to receive(:sample).and_return(*rand_values)
+        account.project(month)
+        expect(account.amount(month)).to eq((account.starting_amount * (1 + rand_values[0])).round(2))
+        month = month.next
+        account.project(month)
+        expect(account.amount(month)).to eq((account.starting_amount * (1 + rand_values[0]) * (1 + rand_values[1])).round(2))
+      end
+    end
+
+    context 'yearly' do
+      let(:account) { build(:expense_account, :with_uncertain_raise, :with_annual_raise, starting_month: Month.new(2018, 11)) }
+      let(:rand_values) { [0.005] }
+      it 'should project correct amounts' do
+        allow(account).to receive(:transact)
+        account.project(account.starting_month)
+        expect(account.amount(account.starting_month)).to eq(account.starting_amount)
+
+        allow(account.rate_of_increase).to receive(:sample).and_return(*rand_values)
+        month = account.starting_month.next
+        account.project(month)
+        expect(account.amount(month)).to eq(account.starting_amount)
+        month = month.next
+        account.project(month)
+        expect(account.amount(month)).to eq((account.starting_amount * (1 + rand_values[0])).round(2))
+      end
+    end
+
+  end
+
+  context 'with random coefficients' do
+
+    let(:account) { build(:expense_account, :with_uncertainty) }
+    let(:rand_values) { [45.02, 51.5] }
+    it 'should sample from a normal distribution' do
+      allow(account).to receive(:transact)
+      double = instance_double(RandomVariable)
+      allow(double).to receive(:sample).and_return(*rand_values)
+      allow(RandomVariable).to receive(:new).with(account.starting_amount, account.stdev_coefficient * account.starting_amount).and_return(double)
+      account.project(account.starting_month)
+      expect(account.amount(account.starting_month)).to eq(rand_values[0].round(2))
+
+      month = account.starting_month.next
+      account.project(month)
+      expect(account.amount(month)).to eq(rand_values[1].round(2))
     end
 
   end
