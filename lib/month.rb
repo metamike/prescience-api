@@ -25,19 +25,11 @@ class Month
   end
 
   def next
-    if month < 12
-      Month.new(year, month + 1)
-    else
-      Month.new(year + 1, 1)
-    end
+    month < 12 ? Month.new(year, month + 1) : Month.new(year + 1, 1)
   end
 
   def prior
-    if month > 1
-      Month.new(year, month - 1)
-    else
-      Month.new(year - 1, 12)
-    end
+    month > 1 ? Month.new(year, month - 1) : Month.new(year - 1, 12)
   end
 
   def prior_year

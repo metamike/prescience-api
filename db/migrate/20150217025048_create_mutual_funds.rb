@@ -5,9 +5,8 @@ class CreateMutualFunds < ActiveRecord::Migration
 
       t.string  :name
       t.string  :starting_month
-      # assumes initial funds have been held longer than a year
-      t.decimal :starting_balance, precision: 10, scale: 2
-      t.string  :interest_rate
+      t.string  :monthly_interest_rate
+      t.string  :monthly_dividend_rate
 
       t.timestamps null: false
     end
