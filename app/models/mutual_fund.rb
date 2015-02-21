@@ -18,30 +18,39 @@ class MutualFund < ActiveRecord::Base
     return if month < starting_month
   end
 
+  def bought(month)
+    @cohorts.bought(month)
+  end
+
+  def sold(month)
+    @cohorts.bought(month)
+  end
+
   def taxable_performance(month)
-    @transactions[month] ? @transactions[month][:taxable_performance] : 0
+    @cohorts.taxable_performance(month)
   end
 
   def qualified_performance(month)
-    @transactions[month] ? @transactions[month][:qualified_performance] : 0
+    @cohorts.qualified_performance(month)
   end
 
   def taxable_dividends(month)
-    @transactions[month] ? @transactions[month][:taxable_dividends] : 0
+    @cohorts.taxable_dividends(month)
   end
 
   def qualified_dividends(month)
-    @transactions[month] ? @transactions[month][:qualified_dividends] : 0
+    @cohorts.qualified_dividends(month)
   end
 
   def ending_balance(month)
-    @transactions[month] ? @transactions[month][:ending_balance] : 0
+    @cohorts.ending_balance(month)
   end
 
   private
 
   def init
     @transactions = {}
+    @cohorts = CohortMatrix.new
   end
 
   def record_transactions_from_bundle(bundle)
@@ -52,36 +61,13 @@ class MutualFund < ActiveRecord::Base
   end
 
   def record_stock_purchase(bundle)
-    reset_transaction(bundle.month_bought) unless @transactions[bundle.month_bought]
-    @transactions[bundle.month_bought][:bought] += bundle.amount
+    @cohorts.record_buy(bundle.month_bought, bundle.amount)
   end
 
   def record_stock_activity(activity)
-    reset_transaction(activity.month) unless @transactions[activity.month]
-    if activity.month - activity.stock_bundle.month_bought <= 12
-      @transactions[activity.month][:taxable_performance] += activity.performance
-      @transactions[activity.month][:taxable_dividends] += activity.dividends
-    else
-      @transactions[activity.month][:qualified_performance] += activity.performance
-      @transactions[activity.month][:qualified_dividends] += activity.dividends
-    end
-    @transactions[activity.month][:sold] += activity.sold
-
-    prior_balance = @transactions[activity.month.prior] ? @transactions[activity.month.prior][:ending_balance] : 0
-    @transactions[activity.month][:ending_balance] = prior_balance + total_performance(activity.month)
-  end
-
-  def total_performance(month)
-    [:bought, :taxable_performance, :qualified_performance, :taxable_dividends, :qualified_dividends].reduce(0) { |a, e| a += @transactions[month][e] } - @transactions[month][:sold]
-  end
-
-  def reset_transaction(month)
-    @transactions[month] = {
-      bought: 0,              sold: 0,
-      taxable_performance: 0, qualified_performance: 0,
-      taxable_dividends: 0,   qualified_dividends: 0,
-      ending_balance: 0
-    }
+    @cohorts.record_performance(activity.stock_bundle.month_bought, activity.month, activity.performance)
+    @cohorts.record_dividends(activity.stock_bundle.month_bought, activity.month, activity.dividends, false)
+    @cohorts.record_sell(activity.stock_bundle.month_bought, activity.month, activity.sold)
   end
 
 end

@@ -76,11 +76,12 @@ describe MutualFund, :type => :model do
         account.project(month)
         performance2 = [bundle1, bundle2].reduce(0) { |a, e| a += e.stock_activities.find { |s| s.month == month }.performance }
         dividends2 = [bundle1, bundle2].reduce(0) { |a, e| a += e.stock_activities.find { |s| s.month == month }.dividends }
+        bundle1div2 = bundle1.stock_activities.sort_by(&:month).last.dividends
         expect(account.taxable_performance(month)).to eq(performance2)
         expect(account.qualified_performance(month)).to eq(0)
         expect(account.taxable_dividends(month)).to eq(dividends2)
         expect(account.qualified_dividends(month)).to eq(0)
-        expect(account.ending_balance(month)).to eq(bundle1.amount + bundle2.amount + performance1 + dividends1 + performance2 + dividends2)
+        expect(account.ending_balance(month)).to eq(bundle1.amount + bundle2.amount + performance1 + dividends1 + performance2 + dividends2 - bundle1div2)
       end
     end
 
