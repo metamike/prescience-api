@@ -6,7 +6,7 @@ class CreateMutualFunds < ActiveRecord::Migration
       t.string  :name
       t.string  :starting_month
       t.string  :monthly_interest_rate
-      t.string  :monthly_dividend_rate
+      t.string  :quarterly_dividend_rate
 
       t.timestamps null: false
     end

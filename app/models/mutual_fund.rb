@@ -6,7 +6,7 @@ class MutualFund < ActiveRecord::Base
 
   serialize :starting_month, Month
   serialize :monthly_interest_rate, RandomVariable
-  serialize :monthly_dividend_rate, RandomVariable
+  serialize :quarterly_dividend_rate, RandomVariable
 
   validates :name, presence: true
   validates :starting_month, presence: true
@@ -16,6 +16,17 @@ class MutualFund < ActiveRecord::Base
 
   def project(month)
     return if month < starting_month
+    interest_rate = monthly_interest_rate.sample
+    dividend_rate = quarterly_dividend_rate.sample if month.end_of_quarter?
+    @cohorts.each_cohort do |cohort_month, cohort|
+      next if cohort[month]
+      starting_balance = @cohorts.cohort_ending_balance(cohort_month, month.prior)
+      next if starting_balance == 0
+      @cohorts.record_performance(cohort_month, month, (interest_rate * starting_balance).round(2))
+      if month.end_of_quarter?
+        @cohorts.record_dividends(cohort_month, month, (dividend_rate * starting_balance).round(2))
+      end
+    end
   end
 
   def bought(month)
@@ -40,6 +51,10 @@ class MutualFund < ActiveRecord::Base
 
   def qualified_dividends(month)
     @cohorts.qualified_dividends(month)
+  end
+
+  def total_performance(month)
+    @cohorts.total_performance(month)
   end
 
   def ending_balance(month)

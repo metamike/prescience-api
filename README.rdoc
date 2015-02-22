@@ -6,8 +6,8 @@
 - Raise
 - Connect income, expense, and savings accounts through scenario and project
 - Use random variables for attributes w/ uncertainty?
-TODO Investment accounts (stock/bond mix & dividends)
-TODO Dividends are reinvested?
+- Investment accounts (stock/bond mix & dividends)
+- Dividends are reinvested?
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses
@@ -19,6 +19,8 @@ TODO Sell a Property
 TODO Car
 TODO Utilities
 TODO 401(k)'s and IRAs
+TODO individual stocks (options?)
+TODO Bond accounts
 TODO Scenario ancestry
 TODO Recessions (no income)
 TODO Retirement

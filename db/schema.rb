@@ -67,9 +67,9 @@ ActiveRecord::Schema.define(version: 20150217160022) do
     t.string   "name"
     t.string   "starting_month"
     t.string   "monthly_interest_rate"
-    t.string   "monthly_dividend_rate"
-    t.datetime "created_at",            null: false
-    t.datetime "updated_at",            null: false
+    t.string   "quarterly_dividend_rate"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
   end
 
   add_index "mutual_funds", ["scenario_id"], name: "index_mutual_funds_on_scenario_id", using: :btree

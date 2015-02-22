@@ -4,6 +4,13 @@ class CohortMatrix
     @cohorts = {}
   end
 
+  def each_cohort
+    # Need to dupe to allow inserts while iterating
+    @cohorts.dup.each do |cohort_month|
+      yield cohort_month
+    end
+  end
+
   def cohort_ending_balance(cohort_month, month)
     return 0 unless @cohorts[cohort_month]
     balance = 0
@@ -41,6 +48,10 @@ class CohortMatrix
     @cohorts.keys.reduce(0) { |a, c|
       a += (@cohorts[c][month] && month - c > 12) ? @cohorts[c][month][:dividends] : 0
     }
+  end
+
+  def total_performance(month)
+    taxable_performance(month) + qualified_performance(month) + taxable_dividends(month) + qualified_dividends(month)
   end
 
   def bought(month)

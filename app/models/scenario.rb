@@ -5,6 +5,7 @@ class Scenario < ActiveRecord::Base
   has_many :savings_accounts
   has_many :income_accounts
   has_many :expense_accounts
+  has_many :mutual_funds
 
   after_initialize :init_report
 
@@ -33,12 +34,13 @@ class Scenario < ActiveRecord::Base
       gross_income: income_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.gross(month) },
       interest: savings_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.interest(month) },
       savings_balance: savings_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.ending_balance(month) },
-      expenses: expense_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.amount(month) }
-    }
+      expenses: expense_accounts.reduce(BigDecimal.new('0')) { |a, e| a + e.amount(month) },
+      stock_performance: mutual_funds.reduce(BigDecimal.new('0')) { |a, e| a + e.total_performance(month) }
+   }
   end
 
   def run_lifecycle(month)
-    [income_accounts, expense_accounts, savings_accounts].each do |accounts|
+    [income_accounts, expense_accounts, savings_accounts, mutual_funds].each do |accounts|
       accounts.each { |account| account.project(month) }
     end
   end

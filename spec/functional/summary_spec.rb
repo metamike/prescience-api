@@ -48,10 +48,11 @@ describe 'Prescience Backend' do
     expectation = {}
     expectation_data.each do |row|
       expectation[month] = {
-        gross_income:    BigDecimal.new(row[0].to_s),
-        interest:        BigDecimal.new(row[3].to_s),
-        savings_balance: BigDecimal.new(row[2].to_s),
-        expenses:        BigDecimal.new(row[1].to_s)
+        gross_income:      BigDecimal.new(row[0].to_s),
+        interest:          BigDecimal.new(row[3].to_s),
+        savings_balance:   BigDecimal.new(row[2].to_s),
+        expenses:          BigDecimal.new(row[1].to_s),
+        stock_performance: BigDecimal.new('0')
       }
       month = month.next
     end

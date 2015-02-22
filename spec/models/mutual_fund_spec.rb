@@ -101,6 +101,59 @@ describe MutualFund, :type => :model do
       end
     end
 
+    context 'projecting with single bundle' do
+
+      context 'with simpleness' do
+        let(:account) { build(:mutual_fund) }
+        let(:bundle) { build(:stock_bundle, :with_activity, month_bought: account.starting_month) }
+        it 'should project one month forward' do
+          account.stock_bundles << bundle
+          month = account.starting_month.next
+          account.project(month)
+          bal = bundle.amount + bundle.stock_activities.first.performance + bundle.stock_activities.first.dividends - bundle.stock_activities.first.sold
+          expect(account.ending_balance(month)).to eq((bal * (1 + account.monthly_interest_rate.sample)).round(2))
+        end
+      end
+
+      context 'without dividends' do
+        let(:account) { build(:mutual_fund) }
+        let(:bundle) { build(:stock_bundle, :with_activity, month_bought: account.starting_month) }
+        it 'should project two months forward w/o dividends' do
+          account.stock_bundles << bundle
+          month = account.starting_month.next.next
+          account.project(account.starting_month.next)
+          account.project(month)
+          # a1
+          # a2
+          # a3
+          bal_a1 = bundle.amount + bundle.stock_activities.first.performance + bundle.stock_activities.first.dividends - bundle.stock_activities.first.sold
+          bal_a2 = (bal_a1 * (1 + account.monthly_interest_rate.sample)).round(2)
+          bal_a3 = (bal_a2 * (1 + account.monthly_interest_rate.sample)).round(2)
+          expect(account.ending_balance(month)).to eq(bal_a3)
+        end
+      end
+
+      context 'with dividends' do
+        let(:account) { build(:mutual_fund, starting_month: build(:month, year: 2014, month: 11)) }
+        let(:bundle) { build(:stock_bundle, :with_activity, month_bought: account.starting_month) }
+        it 'should project two months forward w/ dividends' do
+          account.stock_bundles << bundle
+          month = account.starting_month.next.next
+          account.project(account.starting_month.next)
+          account.project(month)
+          # a1
+          # a2 b2
+          # a3 b3
+          bal_a1 = bundle.amount + bundle.stock_activities.first.performance + bundle.stock_activities.first.dividends - bundle.stock_activities.first.sold
+          bal_a2 = (bal_a1 * (1 + account.monthly_interest_rate.sample)).round(2)
+          bal_b2 = (bal_a1 * account.quarterly_dividend_rate.sample).round(2)
+          bal_a3 = (bal_a2 * (1 + account.monthly_interest_rate.sample)).round(2)
+          bal_b3 = (bal_b2 * (1 + account.monthly_interest_rate.sample)).round(2)
+          expect(account.ending_balance(month)).to eq(bal_a3 + bal_b3)
+        end
+      end
+    end
+
   end
 
 end

@@ -55,6 +55,10 @@ class Month
     self.year - other.year
   end
 
+  def end_of_quarter?
+    @month % 3 == 0
+  end
+
   def hash
     to_s.hash
   end
