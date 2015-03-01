@@ -47,12 +47,16 @@ class SavingsAccount < ActiveRecord::Base
     @transactions[month] ? @transactions[month][:ending_balance] : 0
   end
 
+  def prepare_to_reproject
+    @transactions = {}
+    savings_account_activities.each { |a| build_transaction_from_activity(a) }
+  end
+
   private
 
   def init
-    @transactions = {}
     @monthly_interest_rates = {}
-    savings_account_activities.each { |a| build_transaction_from_activity(a) }
+    prepare_to_reproject
   end
 
   def activities_must_be_in_sequence

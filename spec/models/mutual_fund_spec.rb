@@ -156,4 +156,17 @@ describe MutualFund, :type => :model do
 
   end
 
+  describe '#prepare_to_reproject' do
+    let(:account) { build(:mutual_fund, :with_uncertain_interest) }
+    let(:bundle) { build(:stock_bundle, :with_activity, month_bought: account.starting_month) }
+    it 'should return the same data when projecting again' do
+      account.stock_bundles << bundle
+      account.project(account.starting_month.next)
+      balance = account.ending_balance(account.starting_month.next)
+      account.prepare_to_reproject
+      account.project(account.starting_month.next)
+      expect(account.ending_balance(account.starting_month.next)).to eq(balance)
+    end
+  end
+
 end

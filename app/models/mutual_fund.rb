@@ -12,21 +12,19 @@ class MutualFund < ActiveRecord::Base
   validates :starting_month, presence: true
   validates :monthly_interest_rate, presence: true
 
-  after_initialize :init
+  after_initialize :reset
 
   def project(month)
     return if month < starting_month
-    interest_rate = monthly_interest_rate.sample
-    @interest_rates[month] = interest_rate
-    dividend_rate = quarterly_dividend_rate.sample if month.end_of_quarter?
-    @dividend_rates[month] = dividend_rate
+    @interest_rates[month] ||= monthly_interest_rate.sample
+    @dividend_rates[month] ||= month.end_of_quarter? ? quarterly_dividend_rate.sample : 0 
     @cohorts.each_cohort do |cohort_month, cohort|
       next if cohort[month]
       starting_balance = @cohorts.cohort_ending_balance(cohort_month, month.prior)
       next if starting_balance == 0
-      @cohorts.record_performance(cohort_month, month, (interest_rate * starting_balance).round(2))
+      @cohorts.record_performance(cohort_month, month, (@interest_rates[month] * starting_balance).round(2))
       if month.end_of_quarter?
-        @cohorts.record_dividends(cohort_month, month, (dividend_rate * starting_balance).round(2))
+        @cohorts.record_dividends(cohort_month, month, (@dividend_rates[month] * starting_balance).round(2))
       end
     end
   end
@@ -71,14 +69,17 @@ class MutualFund < ActiveRecord::Base
     @dividend_rates[month] || 0
   end
 
+  def prepare_to_reproject
+    @cohorts = CohortMatrix.new
+    stock_bundles.each { |b| record_transactions_from_bundle(b) }
+  end
+
   private
 
-  def init
-    @transactions = {}
-    @cohorts = CohortMatrix.new
+  def reset
     @interest_rates = {}
     @dividend_rates = {}
-    stock_bundles.each { |b| record_transactions_from_bundle(b) }
+    prepare_to_reproject
   end
 
   def record_transactions_from_bundle(bundle)

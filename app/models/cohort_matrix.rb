@@ -13,19 +13,18 @@ class CohortMatrix
   end
 
   def cohort_ending_balance(cohort_month, month)
-    return 0 unless @cohorts[cohort_month]
-    return 0 unless @cohorts[cohort_month][month]
+    return 0 unless @cohorts[cohort_month] && @cohorts[cohort_month][month]
     @ending_balance_cache[cohort_month] ||= {}
     return @ending_balance_cache[cohort_month][month] if @ending_balance_cache[cohort_month][month]
-    data = @cohorts[cohort_month][month]
+
+    cohort = @cohorts[cohort_month][month]
     if month == cohort_month
-      balance = (data[:bought] || 0) + (data[:performance] || 0) + (data[:dividends] || 0) - (data[:sold] || 0)
+      balance = (cohort[:bought] || 0) + (cohort[:performance] || 0) + (cohort[:dividends] || 0) - (cohort[:sold] || 0)
       @ending_balance_cache[cohort_month][month] = balance
     else
-      balance = (data[:bought] || 0) + (data[:performance] || 0) - (data[:sold] || 0)
+      balance = (cohort[:bought] || 0) + (cohort[:performance] || 0) - (cohort[:sold] || 0)
       @ending_balance_cache[cohort_month][month] = balance + cohort_ending_balance(cohort_month, month.prior)
     end
-    @ending_balance_cache[cohort_month][month]
   end
 
   def ending_balance(month)
@@ -73,6 +72,7 @@ class CohortMatrix
   end
 
   def record_buy(month, amount)
+    @ending_balance_cache = {}
     @cohorts[month] ||= {}
     init_month(month, month) unless @cohorts[month][month]
     @cohorts[month][month][:bought] += amount
@@ -80,13 +80,14 @@ class CohortMatrix
 
   def record_performance(cohort_month, month, amount)
     raise "Invalid month #{month} for cohort #{cohort_month}" if month < cohort_month
+    @ending_balance_cache = {}
     init_month(cohort_month, month) unless @cohorts[cohort_month][month]
     @cohorts[cohort_month][month][:performance] += amount
   end
 
-  # TODO Calling this repeatedly doesn't erase the old dividends since they created new cohorts
   def record_dividends(cohort_month, month, amount, create_new_cohort = true)
     raise "Invalid month #{month} for cohort #{cohort_month}" if month < cohort_month
+    @ending_balance_cache = {}
     init_month(cohort_month, month) unless @cohorts[cohort_month][month]
     @cohorts[cohort_month][month][:dividends] += amount
     record_buy(month, amount) if create_new_cohort && amount > 0
@@ -94,6 +95,7 @@ class CohortMatrix
 
   def record_sell(cohort_month, month, amount)
     raise "Invalid month #{month} for cohort #{cohort_month}" if month < cohort_month
+    @ending_balance_cache = {}
     init_month(cohort_month, month) unless @cohorts[cohort_month][month]
     @cohorts[cohort_month][month][:sold] += amount
   end
