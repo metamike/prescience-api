@@ -44,6 +44,7 @@ class IncomeAccount < ActiveRecord::Base
     @annual_raises = {}
     @annual_salaries = {}
     self.annual_raise ||= RandomVariable.new(0)
+    income_account_activities.each { |a| build_transaction_from_activity(a) }
   end
 
   def activities_must_be_in_sequence

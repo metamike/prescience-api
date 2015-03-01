@@ -52,6 +52,7 @@ class SavingsAccount < ActiveRecord::Base
   def init
     @transactions = {}
     @monthly_interest_rates = {}
+    savings_account_activities.each { |a| build_transaction_from_activity(a) }
   end
 
   def activities_must_be_in_sequence

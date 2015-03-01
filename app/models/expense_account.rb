@@ -82,6 +82,7 @@ class ExpenseAccount < ActiveRecord::Base
     self.increase_schedule ||= 'monthly'
     self.month_coefficients ||= 12.times.map { 1 }
     self.stdev_coefficient ||= 0
+    expense_account_activities.each { |a| build_transaction_from_activity(a) }
   end
 
   def activities_must_be_in_sequence

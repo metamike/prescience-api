@@ -17,7 +17,9 @@ class MutualFund < ActiveRecord::Base
   def project(month)
     return if month < starting_month
     interest_rate = monthly_interest_rate.sample
+    @interest_rates[month] = interest_rate
     dividend_rate = quarterly_dividend_rate.sample if month.end_of_quarter?
+    @dividend_rates[month] = dividend_rate
     @cohorts.each_cohort do |cohort_month, cohort|
       next if cohort[month]
       starting_balance = @cohorts.cohort_ending_balance(cohort_month, month.prior)
@@ -61,11 +63,22 @@ class MutualFund < ActiveRecord::Base
     @cohorts.ending_balance(month)
   end
 
+  def interest_rate(month)
+    @interest_rates[month] || 0
+  end
+
+  def dividend_rate(month)
+    @dividend_rates[month] || 0
+  end
+
   private
 
   def init
     @transactions = {}
     @cohorts = CohortMatrix.new
+    @interest_rates = {}
+    @dividend_rates = {}
+    stock_bundles.each { |b| record_transactions_from_bundle(b) }
   end
 
   def record_transactions_from_bundle(bundle)

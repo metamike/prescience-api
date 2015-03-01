@@ -6,6 +6,11 @@ FactoryGirl.define do
     quarterly_dividend_rate { build(:random_variable, :no_stdev, mean: 0.025/4) }
 
     scenario
+
+    trait :for_summary do
+      monthly_interest_rate { build(:random_variable, mean: 0.007, stdev: 0.0415) }
+      quarterly_dividend_rate { build(:random_variable, mean: 0.0055, stdev: 0.0026) }
+    end
   end
 
 end

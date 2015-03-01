@@ -2,24 +2,30 @@ class CohortMatrix
 
   def initialize
     @cohorts = {}
+    @ending_balance_cache = {}
   end
 
   def each_cohort
     # Need to dupe to allow inserts while iterating
-    @cohorts.dup.each do |cohort_month|
-      yield cohort_month
+    @cohorts.dup.each do |cohort_month, cohort|
+      yield cohort_month, cohort
     end
   end
 
   def cohort_ending_balance(cohort_month, month)
     return 0 unless @cohorts[cohort_month]
-    balance = 0
-    cohort_month.upto(month) do |m|
-      data = @cohorts[cohort_month][m]
-      div = (data[:dividends] if data[:dividends] && m == cohort_month) || 0
-      balance += (data[:bought] || 0) + (data[:performance] || 0) + div - (data[:sold] || 0)
+    return 0 unless @cohorts[cohort_month][month]
+    @ending_balance_cache[cohort_month] ||= {}
+    return @ending_balance_cache[cohort_month][month] if @ending_balance_cache[cohort_month][month]
+    data = @cohorts[cohort_month][month]
+    if month == cohort_month
+      balance = (data[:bought] || 0) + (data[:performance] || 0) + (data[:dividends] || 0) - (data[:sold] || 0)
+      @ending_balance_cache[cohort_month][month] = balance
+    else
+      balance = (data[:bought] || 0) + (data[:performance] || 0) - (data[:sold] || 0)
+      @ending_balance_cache[cohort_month][month] = balance + cohort_ending_balance(cohort_month, month.prior)
     end
-    balance
+    @ending_balance_cache[cohort_month][month]
   end
 
   def ending_balance(month)
@@ -78,6 +84,7 @@ class CohortMatrix
     @cohorts[cohort_month][month][:performance] += amount
   end
 
+  # TODO Calling this repeatedly doesn't erase the old dividends since they created new cohorts
   def record_dividends(cohort_month, month, amount, create_new_cohort = true)
     raise "Invalid month #{month} for cohort #{cohort_month}" if month < cohort_month
     init_month(cohort_month, month) unless @cohorts[cohort_month][month]
