@@ -29,8 +29,17 @@ class ExpenseAccount < ActiveRecord::Base
     else
       amount = BigDecimal.new('0')
     end
-    transact(month, amount)
     @transactions[month] = amount
+  end
+
+  def transact(month)
+    savings_accounts = scenario.savings_accounts.sort_by(&:monthly_interest_rate)
+    current = @transactions[month]
+    savings_accounts.each do |account|
+      current = debit_account(account, month, current)
+      break if current > 0
+    end
+    raise "Insufficient funds to debit #{@transactions[month]} for #{name}" if current > 0
   end
 
   def amount(month)
@@ -102,16 +111,6 @@ class ExpenseAccount < ActiveRecord::Base
 
   def projections_start
     expense_account_activities.empty? ? starting_month : expense_account_activities.last.month.next
-  end
-
-  def transact(month, amount)
-    savings_accounts = scenario.savings_accounts.sort_by(&:monthly_interest_rate)
-    current = amount
-    savings_accounts.each do |account|
-      current = debit_account(account, month, current)
-      break if current > 0
-    end
-    raise "Insufficient funds to debit #{amount} for #{name}" if current > 0
   end
 
   def debit_account(account, month, amount)

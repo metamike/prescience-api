@@ -33,7 +33,7 @@ class SavingsAccount < ActiveRecord::Base
     activity = savings_account_activities.find { |a| a.month == month }
 
     unless activity
-      starting_balance = month == starting_month ? self.starting_balance : @transactions[month.prior][:ending_balance]
+      starting_balance = start_balance(month)
       @transactions[month][:interest] = calc_interest(starting_balance, month, @transactions[month][:credits], @transactions[month][:debits])
       @transactions[month][:ending_balance] = calc_balance(starting_balance, month, @transactions[month][:credits], @transactions[month][:debits])
     end
@@ -41,6 +41,10 @@ class SavingsAccount < ActiveRecord::Base
 
   def interest(month)
     @transactions[month] ? @transactions[month][:interest] : 0
+  end
+
+  def start_balance(month)
+    month == starting_month ? self.starting_balance : @transactions[month.prior][:ending_balance]
   end
 
   def ending_balance(month)

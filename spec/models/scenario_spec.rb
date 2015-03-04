@@ -5,18 +5,26 @@ describe Scenario, :type => :model do
   context 'validations' do
     it { should validate_presence_of(:name) }
     it { should validate_uniqueness_of(:name) }
+    it { should validate_presence_of(:projections_start) }
   end
 
   let(:scenario) { build(:scenario) }
-  let(:savings_account) { build(:savings_account) }
+  let(:savings_account) { build(:savings_account, starting_month: scenario.projections_start) }
   let(:income_account) { build(:income_account, savings_account: savings_account, starting_month: savings_account.starting_month) }
   let(:expense_account) { build(:expense_account, starting_month: savings_account.starting_month, starting_amount: savings_account.starting_balance / 2) }
+  let(:mutual_fund) { build(:mutual_fund, starting_month: scenario.projections_start) }
+
+  it 'does not move funds between accounts when projecting historicals' do
+    pending 'mocking out calls to accounts'
+    fail
+  end
 
   it 'should run accounts in order' do
-    month = savings_account.starting_month
+    month = scenario.projections_start
     scenario.income_accounts << income_account
     scenario.savings_accounts << savings_account
     scenario.expense_accounts << expense_account
+    scenario.mutual_funds << mutual_fund
     report = scenario.project(month)
     expect(report[:gross_income]).to eq(income_account.gross(month))
     expect(report[:interest]).to eq(savings_account.interest(month))

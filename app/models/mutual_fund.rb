@@ -29,6 +29,16 @@ class MutualFund < ActiveRecord::Base
     end
   end
 
+  def buy(month, amount)
+    return if month < starting_month
+    @cohorts.record_buy(month, amount)
+  end
+
+  def sell(month, amount)
+    return if month < starting_month
+    @cohorts.optimal_sell(month, amount)
+  end
+
   def bought(month)
     @cohorts.bought(month)
   end

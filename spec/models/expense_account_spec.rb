@@ -232,7 +232,8 @@ describe ExpenseAccount, :type => :model do
     it 'should fail when there are insufficient funds' do
       low_account.project(account.starting_month)
       account.scenario.savings_accounts << low_account
-      expect { account.project(account.starting_month) }.to raise_error
+      account.project(account.starting_month)
+      expect { account.transact(account.starting_month) }.to raise_error
     end
 
     it 'should proceed when there are sufficient funds' do
@@ -240,6 +241,7 @@ describe ExpenseAccount, :type => :model do
       account.scenario.savings_accounts << high_account
       expect(high_account).to receive(:debit)
       account.project(account.starting_month)
+      account.transact(account.starting_month)
     end
 
   end

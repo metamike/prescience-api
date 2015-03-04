@@ -93,6 +93,20 @@ class CohortMatrix
     record_buy(month, amount) if create_new_cohort && amount > 0
   end
 
+  def optimal_sell(month, amount)
+    raise "Insufficient funds to sell #{amount} on #{month}" if amount > ending_balance(month.prior)
+    current = amount
+    @cohorts.keys.sort.each do |cohort_month|
+      starting_balance = cohort_ending_balance(cohort_month, month.prior)
+      if starting_balance > 0
+        to_sell = current > starting_balance ? starting_balance : current
+        record_sell(cohort_month, month, to_sell)
+        current -= to_sell
+        break if current <= 0
+      end
+    end
+  end
+
   def record_sell(cohort_month, month, amount)
     raise "Invalid month #{month} for cohort #{cohort_month}" if month < cohort_month
     @ending_balance_cache = {}

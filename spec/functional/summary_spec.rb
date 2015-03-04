@@ -20,6 +20,7 @@ describe 'Prescience Backend' do
   let(:scenario) { build(:scenario) }
 
   it 'should generate actuals' do
+    scenario.projections_start = Month.new(2015, 2)
     savings_account_low.savings_account_activities << savings_account_activity_low
     savings_account_high.savings_account_activities << savings_account_activity_high
     scenario.savings_accounts += [savings_account_low, savings_account_high]
@@ -52,7 +53,8 @@ describe 'Prescience Backend' do
         interest:          BigDecimal.new(row[3].to_s),
         savings_balance:   BigDecimal.new(row[2].to_s),
         expenses:          BigDecimal.new(row[1].to_s),
-        stock_performance: BigDecimal.new('0')
+        stock_performance: BigDecimal.new('0'),
+        stock_balance:     BigDecimal.new('0')
       }
       month = month.next
     end
