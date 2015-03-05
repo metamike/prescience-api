@@ -10,14 +10,9 @@ describe Scenario, :type => :model do
 
   let(:scenario) { build(:scenario) }
   let(:savings_account) { build(:savings_account, starting_month: scenario.projections_start) }
-  let(:income_account) { build(:income_account, savings_account: savings_account, starting_month: savings_account.starting_month) }
+  let(:income_account) { build(:income_account, owner: savings_account.owner, starting_month: savings_account.starting_month) }
   let(:expense_account) { build(:expense_account, starting_month: savings_account.starting_month, starting_amount: savings_account.starting_balance / 2) }
   let(:mutual_fund) { build(:mutual_fund, starting_month: scenario.projections_start) }
-
-  it 'does not move funds between accounts when projecting historicals' do
-    pending 'mocking out calls to accounts'
-    fail
-  end
 
   it 'should run accounts in order' do
     month = scenario.projections_start
@@ -35,7 +30,7 @@ describe Scenario, :type => :model do
   context 'with more than one account' do
 
     let(:savings_account2) { build(:savings_account, starting_month: savings_account.starting_month) }
-    let(:income_account2) { build(:income_account, savings_account: savings_account2, starting_month: savings_account.starting_month) }
+    let(:income_account2) { build(:income_account, owner: savings_account2.owner, starting_month: savings_account.starting_month) }
     let(:expense_account2) { build(:expense_account, starting_month: savings_account.starting_month, starting_amount: savings_account.starting_balance / 4) }
 
     it 'should run sums of account info' do
@@ -48,6 +43,35 @@ describe Scenario, :type => :model do
       expect(report[:interest]).to eq(savings_account.interest(month) + savings_account2.interest(month))
       expect(report[:savings_balance]).to eq(savings_account.ending_balance(month) + savings_account2.ending_balance(month))
       expect(report[:expenses]).to eq(expense_account.amount(month) + expense_account2.amount(month))
+    end
+
+  end
+
+  describe '#savings_account_by_owner' do
+    let(:scenario) { build(:scenario) }
+    let(:owner) { build(:owner) }
+
+    context 'with no accounts' do
+      it 'should return nil' do
+        expect(scenario.savings_account_by_owner(owner)).to be_nil
+      end
+    end
+
+    context 'with accounts' do
+      let(:savings1) { build(:savings_account) }
+      let(:savings2) { build(:savings_account, owner: owner) }
+
+      before :each do
+        scenario.savings_accounts += [savings1, savings2]
+      end
+
+      it 'should return nil when no owner is passed' do
+        expect(scenario.savings_account_by_owner(nil)).to be_nil
+      end
+
+      it 'should return the correct account by owner' do
+        expect(scenario.savings_account_by_owner(owner)).to eq(savings2)
+      end
     end
 
   end

@@ -1,6 +1,7 @@
 class SavingsAccount < ActiveRecord::Base
  
   belongs_to :scenario
+  belongs_to :owner
 
   has_many :savings_account_activities, -> { order(:month) },
                                         after_add: :build_transaction_from_activity
@@ -8,6 +9,7 @@ class SavingsAccount < ActiveRecord::Base
   serialize :starting_month, Month
   serialize :monthly_interest_rate, RandomVariable
 
+  validates :owner_id, presence: true
   validates :starting_month, presence: true
   validates :monthly_interest_rate, presence: true
 

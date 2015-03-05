@@ -63,10 +63,15 @@ class Scenario < ActiveRecord::Base
     # end
 
     income_accounts.each { |a| a.project(month) }
+    income_accounts.each { |a| a.transact(month) }
     expense_accounts.each { |a| a.project(month) }
     expense_accounts.each { |a| a.transact(month) }
     savings_accounts.each { |a| a.project(month) }
     mutual_funds.each { |a| a.project(month) }
+  end
+
+  def savings_account_by_owner(owner)
+    savings_accounts.find { |a| a.owner == owner }
   end
 
   private
@@ -86,10 +91,6 @@ class Scenario < ActiveRecord::Base
 
   def init
     @report = {}
-    # FIXME Hack to make sure savings accounts are linked correctly
-    income_accounts.each do |account|
-      account.savings_account = savings_accounts.find { |a| a.id == account.savings_account.id }
-    end
   end
 
 end

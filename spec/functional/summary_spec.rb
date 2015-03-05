@@ -8,16 +8,16 @@ describe 'Prescience Backend' do
   let(:savings_account_high) { build(:savings_account, :for_summary_high) }
 
   let(:income_account_activity_low) { build(:income_account_activity, :for_summary_low) }
-  let(:income_account_low) { build(:income_account, :for_summary_low, savings_account: savings_account_low) }
+  let(:income_account_low) { build(:income_account, :for_summary_low, owner: savings_account_low.owner) }
   let(:income_account_activity_high) { build(:income_account_activity, :for_summary_high) }
-  let(:income_account_high) { build(:income_account, :for_summary_high, savings_account: savings_account_high) }
+  let(:income_account_high) { build(:income_account, :for_summary_high, owner: savings_account_high.owner) }
 
   let(:groceries_activity) { build(:expense_account_activity, :for_summary_groceries) }
   let(:groceries) { build(:expense_account, :for_summary_groceries) }
   let(:entertainment_activity) { build(:expense_account_activity, :for_summary_entertainment) }
   let(:entertainment) { build(:expense_account, :for_summary_entertainment) }
 
-  let(:scenario) { build(:scenario) }
+  let(:scenario) { create(:scenario) }
 
   it 'should generate actuals' do
     scenario.projections_start = Month.new(2015, 2)

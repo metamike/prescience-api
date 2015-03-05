@@ -5,6 +5,7 @@ FactoryGirl.define do
     monthly_interest_rate { build(:random_variable, :no_stdev, mean: Faker::Number.number(2).to_i / 10000.0) }
 
     scenario
+    owner
 
     trait :uncertain_interest do
       monthly_interest_rate { build(:random_variable, mean: 0.0009, stdev: 0.0002) }

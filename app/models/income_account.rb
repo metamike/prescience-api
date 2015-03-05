@@ -1,8 +1,7 @@
 class IncomeAccount < ActiveRecord::Base
 
   belongs_to :scenario
-
-  has_one :savings_account
+  belongs_to :owner
 
   has_many :income_account_activities, -> { order(:month) },
                                        after_add: :build_transaction_from_activity
@@ -10,6 +9,7 @@ class IncomeAccount < ActiveRecord::Base
   serialize :starting_month, Month
   serialize :annual_raise, RandomVariable
 
+  validates :owner, presence: true
   validates :name, presence: true
   validates :starting_month, presence: true
   validates :annual_salary, presence: true, numericality: true
@@ -20,9 +20,7 @@ class IncomeAccount < ActiveRecord::Base
 
   def project(month)
     return if month < starting_month
-    raise "Need at least one savings account to run income" unless savings_account
-    gross = @transactions[month] || (calc_gross(month) / 12.0).round(2)
-    transact(month, gross)
+    @transactions[month] ||= (calc_gross(month) / 12.0).round(2)
   end
 
   def gross(month)
@@ -33,8 +31,11 @@ class IncomeAccount < ActiveRecord::Base
     @annual_salaries[month.year] || 0
   end
 
-  def raise(month)
-    @annual_raises[month.year] || 0
+  def transact(month)
+    raise "No income projected for #{month.to_s}" unless @transactions[month]
+    savings_account = scenario.savings_account_by_owner(owner)
+    raise "No savings account found for #{owner.name}" unless savings_account
+    savings_account.credit(month, @transactions[month])
   end
 
   private
@@ -76,11 +77,6 @@ class IncomeAccount < ActiveRecord::Base
 
   def projections_start
     income_account_activities.empty? ? starting_month : income_account_activities.last.month.next
-  end
-
-  def transact(month, gross)
-    savings_account.credit(month, gross)
-    @transactions[month] = gross
   end
 
 end

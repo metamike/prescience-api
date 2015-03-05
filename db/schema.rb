@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150303023851) do
+ActiveRecord::Schema.define(version: 20150305023415) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -60,7 +60,10 @@ ActiveRecord::Schema.define(version: 20150303023851) do
     t.string   "annual_raise"
     t.datetime "created_at",                             null: false
     t.datetime "updated_at",                             null: false
+    t.integer  "owner_id"
   end
+
+  add_index "income_accounts", ["owner_id"], name: "index_income_accounts_on_owner_id", using: :btree
 
   create_table "mutual_funds", force: :cascade do |t|
     t.integer  "scenario_id"
@@ -73,6 +76,12 @@ ActiveRecord::Schema.define(version: 20150303023851) do
   end
 
   add_index "mutual_funds", ["scenario_id"], name: "index_mutual_funds_on_scenario_id", using: :btree
+
+  create_table "owners", force: :cascade do |t|
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "savings_account_activities", force: :cascade do |t|
     t.integer  "savings_account_id"
@@ -87,15 +96,15 @@ ActiveRecord::Schema.define(version: 20150303023851) do
 
   create_table "savings_accounts", force: :cascade do |t|
     t.integer  "scenario_id"
-    t.integer  "income_account_id"
     t.string   "starting_month"
     t.decimal  "starting_balance",      precision: 9, scale: 2
     t.string   "monthly_interest_rate"
     t.datetime "created_at",                                    null: false
     t.datetime "updated_at",                                    null: false
+    t.integer  "owner_id"
   end
 
-  add_index "savings_accounts", ["income_account_id"], name: "index_savings_accounts_on_income_account_id", using: :btree
+  add_index "savings_accounts", ["owner_id"], name: "index_savings_accounts_on_owner_id", using: :btree
 
   create_table "scenarios", force: :cascade do |t|
     t.string   "name"
