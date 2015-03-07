@@ -20,7 +20,7 @@ describe 'Prescience Backend' do
   let(:scenario) { create(:scenario) }
 
   it 'should generate actuals' do
-    scenario.projections_start = Month.new(2015, 2)
+    scenario.projections_start = Month.new(2014, 1)
     savings_account_low.savings_account_activities << savings_account_activity_low
     savings_account_high.savings_account_activities << savings_account_activity_high
     scenario.savings_accounts += [savings_account_low, savings_account_high]
@@ -30,7 +30,6 @@ describe 'Prescience Backend' do
     groceries.expense_account_activities << groceries_activity
     entertainment.expense_account_activities << entertainment_activity
     scenario.expense_accounts += [groceries, entertainment]
-    month = Month.new(2014, 1)
     expectation_data = [
       [22833.33, 1211.50, 59020.80, 2.66],
       [23333.33, 1280.00, 81078.53, 4.40],
@@ -44,11 +43,12 @@ describe 'Prescience Backend' do
       [23333.33, 1304.21, 257476.43, 14.33],
       [23333.33, 1307.27, 279518.06, 15.57],
       [23333.33, 1310.34, 301557.87, 16.82],
-      [24056.67, 1313.42, 324319.22, 18.09]
+      [24056.67, 1313.42, 324319.22, 18.10]
     ]
     expectation = {}
+    current = scenario.projections_start
     expectation_data.each do |row|
-      expectation[month] = {
+      expectation[current] = {
         gross_income:      BigDecimal.new(row[0].to_s),
         interest:          BigDecimal.new(row[3].to_s),
         savings_balance:   BigDecimal.new(row[2].to_s),
@@ -56,14 +56,15 @@ describe 'Prescience Backend' do
         stock_performance: BigDecimal.new('0'),
         stock_balance:     BigDecimal.new('0')
       }
-      month = month.next
-    end
-    current = Month.new(2014, 1)
-    loop do
-      scenario.project(current)
-      expect(scenario.report[current]).to eq(expectation[current])
       current = current.next
-      break if current == Month.new(2015, 1)
+    end
+    projector = Projector.new(scenario)
+    projector.project(Month.new(2015, 1))
+    current = scenario.projections_start
+    loop do
+      expect(projector.report[current]).to eq(expectation[current])
+      current = current.next
+      break if current == Month.new(2015, 2)
     end
  end
 

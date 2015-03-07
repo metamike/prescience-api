@@ -58,6 +58,10 @@ class SavingsAccount < ActiveRecord::Base
     savings_account_activities.each { |a| build_transaction_from_activity(a) }
   end
 
+  def transact(month)
+    # El zilcho
+  end
+
   private
 
   def init

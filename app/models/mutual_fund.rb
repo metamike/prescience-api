@@ -84,6 +84,10 @@ class MutualFund < ActiveRecord::Base
     stock_bundles.each { |b| record_transactions_from_bundle(b) }
   end
 
+  def transact(month)
+    # no es nada
+  end
+
   private
 
   def reset
