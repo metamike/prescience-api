@@ -50,7 +50,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise) }
 
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
         current = account.starting_month.next
@@ -68,7 +67,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_random_months) }
 
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(19) do |i|
           coefficient = account.coefficients[current.month - 1]
@@ -85,7 +83,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_year_interval, :with_random_months) }
 
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(61) do |i|
           coefficient = account.coefficients[current.month - 1]
@@ -103,7 +100,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise) }
 
       it 'should start inflating after activity' do
-        allow(account).to receive(:transact)
         current = account.starting_month
         18.times do   # makes sure it skips a year
           activity = build(:expense_account_activity, month: current)
@@ -129,7 +125,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_annual_raise) }
 
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
         current = account.starting_month.next
@@ -148,7 +143,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_raise, :with_annual_raise, :with_year_interval, :with_random_months) }
 
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         current = account.starting_month
         0.upto(61) do |i|
           coefficient = account.coefficients[current.month - 1]
@@ -170,7 +164,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_uncertain_raise) }
       let(:rand_values) { [0.0233, -0.099] }
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
   
@@ -188,7 +181,6 @@ describe ExpenseAccount, :type => :model do
       let(:account) { build(:expense_account, :with_uncertain_raise, :with_annual_raise, starting_month: Month.new(2018, 11)) }
       let(:rand_values) { [0.005] }
       it 'should project correct amounts' do
-        allow(account).to receive(:transact)
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
 
@@ -209,7 +201,6 @@ describe ExpenseAccount, :type => :model do
     let(:account) { build(:expense_account, :with_uncertainty) }
     let(:rand_values) { [45.02, 51.5] }
     it 'should sample from a normal distribution' do
-      allow(account).to receive(:transact)
       double = instance_double(RandomVariable)
       allow(double).to receive(:sample).and_return(*rand_values)
       allow(RandomVariable).to receive(:new).with(account.starting_amount, account.stdev_coefficient * account.starting_amount).and_return(double)
@@ -223,25 +214,54 @@ describe ExpenseAccount, :type => :model do
 
   end
 
-  context '#transact' do
+  describe '#transact' do
 
-    let(:account) { build(:expense_account, starting_amount: BigDecimal.new('50')) }
-    let(:low_account) { build(:savings_account, starting_balance: account.starting_amount - 1) }
-    let(:high_account) { build(:savings_account, starting_balance: account.starting_amount + 1) }
+    let(:scenario) { mock_model(Scenario) }
+    let(:account) { build(:expense_account, scenario: scenario) }
+    #let(:low_account) { build(:savings_account, starting_balance: account.starting_amount - 1) }
+    #let(:high_account) { build(:savings_account, starting_balance: account.starting_amount + 1) }
 
-    it 'should fail when there are insufficient funds' do
-      low_account.project(account.starting_month)
-      account.scenario.savings_accounts << low_account
-      account.project(account.starting_month)
-      expect { account.transact(account.starting_month) }.to raise_error
+    context 'with insufficient funds' do
+      let(:savings) { instance_double(SavingsAccount) }
+      before :each do
+        allow(savings).to receive(:start_balance).with(account.starting_month).and_return(0)
+        allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings])
+      end
+      it 'should fail' do
+        account.project(account.starting_month)
+        expect { account.transact(account.starting_month) }.to raise_error
+      end
     end
 
-    it 'should proceed when there are sufficient funds' do
-      high_account.project(account.starting_month)
-      account.scenario.savings_accounts << high_account
-      expect(high_account).to receive(:debit)
-      account.project(account.starting_month)
-      account.transact(account.starting_month)
+    context 'with sufficient funds' do
+      let(:savings) { instance_double(SavingsAccount) }
+      before :each do
+        allow(savings).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount + 50)
+        allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings])
+      end
+      it 'should debit the correct amount' do
+        expect(savings).to receive(:debit).with(account.starting_month, account.starting_amount)
+        account.project(account.starting_month)
+        account.transact(account.starting_month)
+      end
+    end
+
+    context 'with multiple accounts' do
+      let(:savings1) { instance_double(SavingsAccount) }
+      let(:savings2) { instance_double(SavingsAccount) }
+      let(:savings3) { instance_double(SavingsAccount) }
+      before :each do
+        allow(savings1).to receive(:start_balance).with(account.starting_month).and_return((account.starting_amount / 3).round(2))
+        allow(savings2).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount * 2)
+        allow(savings2).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount)
+        allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings1, savings2, savings3])
+      end
+      it 'should debit accounts in order' do
+        expect(savings1).to receive(:debit).with(account.starting_month, (account.starting_amount / 3).round(2))
+        expect(savings2).to receive(:debit).with(account.starting_month, account.starting_amount - (account.starting_amount / 3).round(2))
+        account.project(account.starting_month)
+        account.transact(account.starting_month)
+      end
     end
 
   end

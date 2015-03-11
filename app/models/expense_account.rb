@@ -37,7 +37,7 @@ class ExpenseAccount < ActiveRecord::Base
     current = @transactions[month]
     savings_accounts.each do |account|
       current = debit_account(account, month, current)
-      break if current > 0
+      break if current <= 0
     end
     raise "Insufficient funds to debit #{@transactions[month]} for #{name}" if current > 0
   end
@@ -114,7 +114,7 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def debit_account(account, month, amount)
-    starting_balance = month == account.starting_month ? account.starting_balance : account.ending_balance(month.prior)
+    starting_balance = account.start_balance(month)
     if starting_balance >= amount
       account.debit(month, amount)
       0
