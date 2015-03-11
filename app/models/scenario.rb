@@ -15,4 +15,8 @@ class Scenario < ActiveRecord::Base
     savings_accounts.find { |a| a.owner == owner }
   end
 
+  def savings_accounts_by_interest_rate
+    savings_accounts.sort_by(&:monthly_interest_rate)
+  end
+
 end

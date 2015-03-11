@@ -33,7 +33,7 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def transact(month)
-    savings_accounts = scenario.savings_accounts.sort_by(&:monthly_interest_rate)
+    savings_accounts = scenario.savings_accounts_by_interest_rate
     current = @transactions[month]
     savings_accounts.each do |account|
       current = debit_account(account, month, current)
