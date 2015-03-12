@@ -169,4 +169,11 @@ describe MutualFund, :type => :model do
     end
   end
 
+  describe '#transact' do
+    let(:account) { build(:mutual_fund) }
+    it 'should not fail' do
+      expect { account.transact(account.starting_month) }.to_not raise_error
+    end
+  end
+
 end

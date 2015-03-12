@@ -218,8 +218,10 @@ describe ExpenseAccount, :type => :model do
 
     let(:scenario) { mock_model(Scenario) }
     let(:account) { build(:expense_account, scenario: scenario) }
-    #let(:low_account) { build(:savings_account, starting_balance: account.starting_amount - 1) }
-    #let(:high_account) { build(:savings_account, starting_balance: account.starting_amount + 1) }
+
+    it 'should fail if not projected' do
+      expect { account.transact(account.starting_month) }.to raise_error
+    end
 
     context 'with insufficient funds' do
       let(:savings) { instance_double(SavingsAccount) }

@@ -122,5 +122,12 @@ describe SavingsAccount, :type => :model do
 
   end
 
+  describe '#transact' do
+    let(:account) { build(:savings_account) }
+    it 'should not fail' do
+      expect { account.transact(account.starting_month) }.to_not raise_error
+    end
+  end
+
 end
 

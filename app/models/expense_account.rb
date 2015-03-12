@@ -33,6 +33,7 @@ class ExpenseAccount < ActiveRecord::Base
   end
 
   def transact(month)
+    raise "No projection for #{month}. Please run #project first" unless @transactions[month]
     savings_accounts = scenario.savings_accounts_by_interest_rate
     current = @transactions[month]
     savings_accounts.each do |account|

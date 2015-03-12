@@ -47,14 +47,11 @@ class Projector
     #   end
     # end
 
-    @scenario.income_accounts.each { |a| a.project(month) }
-    @scenario.income_accounts.each { |a| a.transact(month) }
-    @scenario.expense_accounts.each { |a| a.project(month) }
-    @scenario.expense_accounts.each { |a| a.transact(month) }
-    @scenario.savings_accounts.each { |a| a.project(month) }
-    @scenario.savings_accounts.each { |a| a.transact(month) }
-    @scenario.mutual_funds.each { |a| a.project(month) }
-    @scenario.mutual_funds.each { |a| a.transact(month) }
+    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.savings_accounts,
+        @scenario.mutual_funds].each do |bundle|
+      bundle.each { |a| a.project(month) }
+      bundle.each { |a| a.transact(month) }
+    end
   end
 
   def upcoming_expenses(month)
