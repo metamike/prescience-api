@@ -43,6 +43,19 @@ class ExpenseAccount < ActiveRecord::Base
     raise "Insufficient funds to debit #{@transactions[month]} for #{name}" if current > 0
   end
 
+  def summary(month)
+    {
+      'expenses' => {
+        name => {
+          'amount' => amount(month)
+        },
+        'TOTAL' => {
+          'amount' => amount(month)
+        }
+      }
+    }
+  end
+
   def amount(month)
     @transactions.has_key?(month) ? @transactions[month] : BigDecimal.new('0')
   end

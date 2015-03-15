@@ -176,4 +176,26 @@ describe MutualFund, :type => :model do
     end
   end
 
+  describe '#summary' do
+    let(:account) { build(:mutual_fund) }
+    let(:bundle) { build(:stock_bundle, :with_activity, month_bought: account.starting_month) }
+
+    before :each do
+      account.stock_bundles << bundle
+    end
+
+    it 'should return summaries' do
+      expected = {'mutual funds' => {
+        'starting balance' => account.starting_balance(account.starting_month),
+        'bought' => account.bought(account.starting_month),
+        'sold' => account.sold(account.starting_month),
+        'performance' => account.taxable_performance(account.starting_month) + account.qualified_performance(account.starting_month),
+        'dividends' => account.taxable_dividends(account.starting_month) + account.qualified_dividends(account.starting_month),
+        'ending balance' => account.ending_balance(account.starting_month)
+      }}
+      account.project(account.starting_month)
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+  end
+
 end

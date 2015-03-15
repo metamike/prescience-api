@@ -129,5 +129,25 @@ describe SavingsAccount, :type => :model do
     end
   end
 
+  describe '#summary' do
+
+    let(:account) { build(:savings_account) }
+
+    it 'should return zero when not projected' do
+      expected = {'savings' => {'interest' => 0, 'ending balance' => 0}}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+    it 'should summarize interest and ending balance' do
+      account.project(account.starting_month)
+      expected = {'savings' => {
+        'interest' => account.interest(account.starting_month),
+        'ending balance' => account.ending_balance(account.starting_month)
+      }}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+  end
+
 end
 

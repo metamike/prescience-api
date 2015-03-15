@@ -67,6 +67,10 @@ class MutualFund < ActiveRecord::Base
     @cohorts.total_performance(month)
   end
 
+  def starting_balance(month)
+    @cohorts.starting_balance(month)
+  end
+
   def ending_balance(month)
     @cohorts.ending_balance(month)
   end
@@ -86,6 +90,19 @@ class MutualFund < ActiveRecord::Base
 
   def transact(month)
     # no es nada
+  end
+
+  def summary(month)
+    {
+      'mutual funds' => {
+        'starting balance' => starting_balance(month),
+        'bought' => bought(month),
+        'sold' => sold(month),
+        'performance' => taxable_performance(month) + qualified_performance(month),
+        'dividends' => taxable_dividends(month) + qualified_dividends(month),
+        'ending balance' => ending_balance(month)
+      }
+    }
   end
 
   private

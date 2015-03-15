@@ -31,6 +31,10 @@ class CohortMatrix
     @cohorts.keys.reduce(0) { |a, c| a += cohort_ending_balance(c, month) }
   end
 
+  def starting_balance(month)
+    ending_balance(month.prior)
+  end
+
   def taxable_performance(month)
     @cohorts.keys.reduce(0) { |a, c|
       a += (@cohorts[c][month] && month - c <= 12) ? @cohorts[c][month][:performance] : 0

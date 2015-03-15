@@ -6,6 +6,7 @@ describe Scenario, :type => :model do
     it { should validate_presence_of(:name) }
     it { should validate_uniqueness_of(:name) }
     it { should validate_presence_of(:projections_start) }
+    it { should validate_presence_of(:starting_month) }
   end
 
   let(:scenario) { build(:scenario) }

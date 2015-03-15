@@ -131,5 +131,22 @@ describe IncomeAccount, :type => :model do
 
   end
 
+  describe '#summary' do
+
+    let(:account) { build(:income_account) }
+
+    it 'should return zero when not projected' do
+      expected = {'income' => {'gross' => 0}}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+    it 'should return gross income when projected' do
+      account.project(account.starting_month)
+      expected = {'income' => {'gross' => account.gross(account.starting_month)}}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+  end
+
 end
 

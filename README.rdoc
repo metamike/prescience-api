@@ -8,7 +8,9 @@
 - Use random variables for attributes w/ uncertainty?
 - Investment accounts (stock/bond mix & dividends)
 - Dividends are reinvested?
-TODO the way accounts are connected sucks - should always go through scenario
+- the way accounts are connected sucks - should always go through scenario
+- supporting #transact for historicals is weird inside of projector
+- different accounts have different ways of generating a report
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses

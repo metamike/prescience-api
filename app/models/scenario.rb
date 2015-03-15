@@ -7,8 +7,10 @@ class Scenario < ActiveRecord::Base
   has_many :expense_accounts
   has_many :mutual_funds
 
+  serialize :starting_month,    Month
   serialize :projections_start, Month
 
+  validates :starting_month,    presence: true
   validates :projections_start, presence: true
 
   def savings_account_by_owner(owner)

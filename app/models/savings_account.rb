@@ -62,6 +62,15 @@ class SavingsAccount < ActiveRecord::Base
     # El zilcho
   end
 
+  def summary(month)
+    {
+      'savings' => {
+        'interest' => interest(month),
+        'ending balance' => ending_balance(month)
+      }
+    }
+  end
+
   private
 
   def init

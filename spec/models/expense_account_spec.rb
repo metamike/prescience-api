@@ -268,5 +268,22 @@ describe ExpenseAccount, :type => :model do
 
   end
 
+  describe '#summary' do
+
+    let(:account) { build(:expense_account) }
+
+    it 'should return zero when not projected' do
+      expected = {'expenses' => {account.name => {'amount' => 0}, 'TOTAL' => {'amount' => 0}}}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+    it 'should return same as amount when projected' do
+      account.project(account.starting_month)
+      expected = {'expenses' => {account.name => {'amount' => account.starting_amount}, 'TOTAL' => {'amount' => account.starting_amount}}}
+      expect(account.summary(account.starting_month)).to eq(expected)
+    end
+
+  end
+
 end
 

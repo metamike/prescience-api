@@ -38,6 +38,14 @@ class IncomeAccount < ActiveRecord::Base
     savings_account.credit(month, @transactions[month])
   end
 
+  def summary(month)
+    {
+      'income' => {
+        'gross' => gross(month)
+      }
+    }
+  end
+
   private
 
   def init
