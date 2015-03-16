@@ -163,17 +163,28 @@ describe ExpenseAccount, :type => :model do
     context 'monthly' do
       let(:account) { build(:expense_account, :with_uncertain_raise) }
       let(:rand_values) { [0.0233, -0.099] }
+
+      before :each do
+        allow(account.rate_of_increase).to receive(:sample).and_return(*rand_values)
+      end
+
       it 'should project correct amounts' do
         account.project(account.starting_month)
         expect(account.amount(account.starting_month)).to eq(account.starting_amount)
   
         month = account.starting_month.next
-        allow(account.rate_of_increase).to receive(:sample).and_return(*rand_values)
         account.project(month)
         expect(account.amount(month)).to eq((account.starting_amount * (1 + rand_values[0])).round(2))
         month = month.next
         account.project(month)
         expect(account.amount(month)).to eq((account.starting_amount * (1 + rand_values[0]) * (1 + rand_values[1])).round(2))
+      end
+
+      it 'should return the same value when called repeatedly' do
+        2.times { account.project(account.starting_month) }
+        expect(account.amount(account.starting_month)).to eq(account.starting_amount)
+        2.times { account.project(account.starting_month.next) }
+        expect(account.amount(account.starting_month.next)).to eq((account.starting_amount * (1 + rand_values[0])).round(2))
       end
     end
 

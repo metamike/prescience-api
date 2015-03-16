@@ -44,7 +44,7 @@ class MutualFund < ActiveRecord::Base
   end
 
   def sold(month)
-    @cohorts.bought(month)
+    @cohorts.sold(month)
   end
 
   def taxable_performance(month)

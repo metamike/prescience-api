@@ -11,6 +11,7 @@
 - the way accounts are connected sucks - should always go through scenario
 - supporting #transact for historicals is weird inside of projector
 - different accounts have different ways of generating a report
+- TODO mutual funds not transacting w/ savings
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses

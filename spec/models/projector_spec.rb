@@ -38,7 +38,7 @@ describe Projector, :type => :model do
       let(:income_account) { mock_model(IncomeAccount) }
       let(:expense_account) { mock_model(ExpenseAccount) }
       let(:mutual_fund) { mock_model(MutualFund) }
-      let(:savings_balance) { BigDecimal.new('5000') }
+      let(:savings_balance) { BigDecimal.new('500000') }
 
       before :each do
         [savings_account, income_account, expense_account, mutual_fund].each do |account|
@@ -65,7 +65,8 @@ describe Projector, :type => :model do
           allow(expense_account).to receive(:amount).with(current).and_return((savings_balance / 10).round(0))
           current = current.next
         end
-        expect(mutual_fund).to receive(:buy).with(scenario.projections_start, savings_balance - (savings_balance * 6 / 10.round(0)))
+        expect(mutual_fund).to receive(:buy).with(scenario.projections_start, savings_balance - (savings_balance * 6 / 10).round(0) - 30000)
+        expect(savings_account).to receive(:debit).with(scenario.projections_start, savings_balance - (savings_balance * 6 / 10).round(0) - 30000)
         Projector.new(scenario).project(scenario.projections_start)
       end
  
@@ -83,6 +84,7 @@ describe Projector, :type => :model do
           current = current.next
         end
         expect(mutual_fund).to receive(:sell).with(scenario.projections_start, savings_balance * 2)
+        expect(savings_account).to receive(:credit).with(scenario.projections_start, savings_balance * 2)
         Projector.new(scenario).project(scenario.projections_start)
       end
     end

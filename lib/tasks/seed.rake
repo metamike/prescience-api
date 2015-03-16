@@ -1,12 +1,21 @@
-task :seed do
-
 # Scenarios
 scenario = Scenario.find_by_name('ROOT')
-scenario = Scenario.create!(name: 'ROOT') unless scenario
+unless scenario
+  scenario = Scenario.create!(
+    name: 'ROOT',
+    starting_month: Month.new(2014, 1),
+    projections_start: Month.new(2015, 2)
+  )
+end
+
+# Owners
+mike = Owner.find_by_name('Mike') || Owner.create!(name: 'Mike')
+robin = Owner.find_by_name('Robin') || Owner.create!(name: 'Robin')
 
 # Savings
-unless SavingsAccount.find_by_starting_balance(BigDecimal.new('45298'))
+unless SavingsAccount.find_by_owner_id(mike.id)
   mike_savings = SavingsAccount.create!(
+    owner: mike,
     starting_month: Month.new(2015, 2),
     starting_balance: BigDecimal.new('45298'),
     monthly_interest_rate: RandomVariable.new(0.00002, 0.00001)
@@ -14,8 +23,9 @@ unless SavingsAccount.find_by_starting_balance(BigDecimal.new('45298'))
   scenario.savings_accounts << mike_savings
   scenario.save!
 end
-unless SavingsAccount.find_by_starting_balance(BigDecimal.new('75311'))
+unless SavingsAccount.find_by_owner_id(robin.id)
   robin_savings = SavingsAccount.create!(
+    owner: robin,
     starting_month: Month.new(2015, 2),
     starting_balance: BigDecimal.new('75311'),
     monthly_interest_rate: RandomVariable.new(0.00008, 0.00001)
@@ -25,24 +35,24 @@ unless SavingsAccount.find_by_starting_balance(BigDecimal.new('75311'))
 end
 
 # Income
-unless IncomeAccount.find_by_name('Mike''s Income')
+unless IncomeAccount.find_by_owner_id(mike.id)
   mike_income = IncomeAccount.create!(
     name: 'Mike''s Income',
+    owner: mike,
     starting_month: Month.new(2015, 2),
     annual_raise: RandomVariable.new(0.03, 0.02),
-    annual_salary: BigDecimal.new('170000'),
-    savings_account: mike_savings
+    annual_salary: BigDecimal.new('170000')
   )
   scenario.income_accounts << mike_income
   scenario.save!
 end
-unless IncomeAccount.find_by_name('Robin''s Income')
+unless IncomeAccount.find_by_owner_id(robin.id)
   robin_income = IncomeAccount.create!(
     name: 'Robin''s Income',
+    owner: robin,
     starting_month: Month.new(2015, 2),
     annual_raise: RandomVariable.new(0.03, 0.02),
-    annual_salary: BigDecimal.new('150000'),
-    savings_account: robin_savings
+    annual_salary: BigDecimal.new('150000')
   )
   scenario.income_accounts << robin_income
   scenario.save!
@@ -111,4 +121,3 @@ unless MutualFund.find_by_name('Vanguard Stock Fund')
   scenario.save!
 end
 
-end

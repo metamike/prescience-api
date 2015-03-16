@@ -54,6 +54,7 @@ describe 'Prescience Backend' do
           'gross' => row[0]
         },
         'savings' => {
+          'starting balance' => 0,   # TODO populate
           'interest' => row[5],
           'ending balance' => row[4]
         },
