@@ -1,9 +1,11 @@
+task :seeding do
+
 # Scenarios
 scenario = Scenario.find_by_name('ROOT')
 unless scenario
   scenario = Scenario.create!(
     name: 'ROOT',
-    starting_month: Month.new(2014, 1),
+    starting_month: Month.new(2013, 7),
     projections_start: Month.new(2015, 2)
   )
 end
@@ -63,11 +65,52 @@ unless ExpenseAccount.find_by_name('Expenses')
   expenses = ExpenseAccount.create!(
     name: 'Expenses',
     starting_month: Month.new(2015, 2),
-    starting_amount: BigDecimal.new('8000'),
+    starting_amount: BigDecimal.new('12900'),
     rate_of_increase: RandomVariable.new(0.03/12, 0.02/12),
     stdev_coefficient: 0.1
   )
   scenario.expense_accounts << expenses
+  scenario.save!
+end
+
+# Home Equity
+unless HomeEquityAccount.any?
+  home_equity = HomeEquityAccount.create!(
+    month_bought: Month.new(2013, 7),
+    loan_amount: BigDecimal.new('1064000'),
+    interest_rate: BigDecimal.new('0.04125'),
+    loan_term_months: 360
+  )
+  equity_data = [
+    ['2013-07',    0,       0   ],
+    ['2013-08',    0,       0   ],
+    ['2013-09', 1499.17, 3657.50],
+    ['2013-10', 3013.81, 7299.53],
+    ['2013-11',    0,       0   ],
+    ['2013-12', 1514.68, 3641.99],
+    ['2014-01', 1519.89, 3636.78],
+    ['2014-02', 3055.47, 7257.87],
+    ['2014-03',    0,       0   ],
+    ['2014-04', 1535.62, 3621.05],
+    ['2014-05', 1540.90, 3615.77],
+    ['2014-06', 1546.19, 3610.48],
+    ['2014-07', 1551.51, 3605.16],
+    ['2014-08', 1556.84, 3599.83],
+    ['2014-09', 1562.19, 3594.48],
+    ['2014-10', 1567.56, 3589.11],
+    ['2014-11', 1572.95, 3583.72],
+    ['2014-12', 1578.36, 3578.31],
+    ['2015-01', 1583.78, 3572.89]
+  ]
+  equity_data.each do |row|
+    HomeEquityAccountActivity.create!(
+      month: Month.parse(row[0]),
+      principal: BigDecimal.new(row[1].to_s),
+      interest: BigDecimal.new(row[2].to_s),
+      home_equity_account: home_equity
+    )
+  end
+  scenario.home_equity_accounts << home_equity
   scenario.save!
 end
 
@@ -121,3 +164,4 @@ unless MutualFund.find_by_name('Vanguard Stock Fund')
   scenario.save!
 end
 
+end

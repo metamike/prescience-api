@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150313143903) do
+ActiveRecord::Schema.define(version: 20150316032706) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -41,6 +41,29 @@ ActiveRecord::Schema.define(version: 20150313143903) do
   end
 
   add_index "expense_accounts", ["scenario_id"], name: "index_expense_accounts_on_scenario_id", using: :btree
+
+  create_table "home_equity_account_activities", force: :cascade do |t|
+    t.integer  "home_equity_account_id"
+    t.string   "month"
+    t.decimal  "principal",              precision: 8, scale: 2
+    t.decimal  "interest",               precision: 8, scale: 2
+    t.datetime "created_at",                                     null: false
+    t.datetime "updated_at",                                     null: false
+  end
+
+  add_index "home_equity_account_activities", ["home_equity_account_id"], name: "index_home_equity_account_activities_on_home_equity_account_id", using: :btree
+
+  create_table "home_equity_accounts", force: :cascade do |t|
+    t.integer  "scenario_id"
+    t.string   "month_bought"
+    t.decimal  "loan_amount",      precision: 10, scale: 2
+    t.integer  "loan_term_months"
+    t.decimal  "interest_rate",    precision: 6,  scale: 5
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+  end
+
+  add_index "home_equity_accounts", ["scenario_id"], name: "index_home_equity_accounts_on_scenario_id", using: :btree
 
   create_table "income_account_activities", force: :cascade do |t|
     t.integer  "income_account_id"

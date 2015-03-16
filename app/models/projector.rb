@@ -25,8 +25,8 @@ class Projector
   private
 
   def project_historicals(month)
-    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.savings_accounts,
-        @scenario.mutual_funds].each do |bundle|
+    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
+        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
       bundle.each { |a| a.project(month) }
     end
   end
@@ -34,8 +34,8 @@ class Projector
   def run_lifecycle(month)
     buy_or_sell_stock(month)
 
-    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.savings_accounts,
-        @scenario.mutual_funds].each do |bundle|
+    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
+        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
       bundle.each { |a| a.project(month) }
       bundle.each { |a| a.transact(month) }
     end
@@ -71,9 +71,11 @@ class Projector
     current = month
     upcoming_expenses = 0
     6.times do
-      @scenario.expense_accounts.each do |account|
-        account.project(current)
-        upcoming_expenses += account.amount(current)
+      [@scenario.expense_accounts, @scenario.home_equity_accounts].each do |bundle|
+        bundle.each do |account|
+          account.project(current)
+          upcoming_expenses += account.amount(current)
+        end
       end
       current = current.next
     end
@@ -86,8 +88,8 @@ class Projector
 
   def generate_report(month)
     accumulator = SummaryAccumulator.new
-    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.savings_accounts,
-        @scenario.mutual_funds].each do |bundle|
+    [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
+        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
       bundle.each { |a| accumulator.merge(a.summary(month)) }
     end
     accumulator.summary

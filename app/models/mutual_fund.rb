@@ -96,7 +96,7 @@ class MutualFund < ActiveRecord::Base
     {
       'mutual funds' => {
         'starting balance' => starting_balance(month),
-        'bought' => bought(month),
+        'bought' => bought(month),   # NOTE includes dividends!
         'sold' => sold(month),
         'performance' => taxable_performance(month) + qualified_performance(month),
         'dividends' => taxable_dividends(month) + qualified_dividends(month),

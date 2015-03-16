@@ -1,5 +1,7 @@
 class ExpenseAccount < ActiveRecord::Base
 
+  include Expendable
+
   belongs_to :scenario
 
   has_many :expense_account_activities, -> { order(:month) },
@@ -34,13 +36,7 @@ class ExpenseAccount < ActiveRecord::Base
 
   def transact(month)
     raise "No projection for #{month}. Please run #project first" unless @transactions[month]
-    savings_accounts = scenario.savings_accounts_by_interest_rate
-    current = @transactions[month]
-    savings_accounts.each do |account|
-      current = debit_account(account, month, current)
-      break if current <= 0
-    end
-    raise "Insufficient funds to debit #{@transactions[month]} for #{name}" if current > 0
+    expense(month, @transactions[month])
   end
 
   def summary(month)
@@ -125,18 +121,6 @@ class ExpenseAccount < ActiveRecord::Base
 
   def projections_start
     expense_account_activities.empty? ? starting_month : expense_account_activities.last.month.next
-  end
-
-  def debit_account(account, month, amount)
-    starting_balance = account.start_balance(month)
-    if starting_balance >= amount
-      account.debit(month, amount)
-      0
-    else
-      remaining = amount - starting_balance
-      account.debit(month, starting_balance)
-      remaining
-    end
   end
 
 end

@@ -12,12 +12,12 @@
 - supporting #transact for historicals is weird inside of projector
 - different accounts have different ways of generating a report
 - TODO mutual funds not transacting w/ savings
+- Mortgages
+TODO Equity
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses
 TODO Other Income
-TODO Mortgages
-TODO Equity
 TODO Rental Property
 TODO Sell a Property
 TODO Car

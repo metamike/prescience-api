@@ -49,6 +49,11 @@ class SavingsAccount < ActiveRecord::Base
     month == starting_month ? self.starting_balance : (@transactions[month.prior] ? @transactions[month.prior][:ending_balance] : 0)
   end
 
+  def running_balance(month)
+    start_balance(month) + (@transactions[month] ? @transactions[month][:credits] : 0) -
+      (@transactions[month] ? @transactions[month][:debits] : 0)
+  end
+
   def ending_balance(month)
     @transactions[month] ? @transactions[month][:ending_balance] : 0
   end

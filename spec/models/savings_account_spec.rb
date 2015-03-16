@@ -122,6 +122,17 @@ describe SavingsAccount, :type => :model do
 
   end
 
+  describe '#running_balance' do
+    let(:account) { build(:savings_account) }
+    let(:credit) { 1000 }
+    let(:debit) { 200 }
+    it 'should respect credits and debits' do
+      2.times { account.credit(account.starting_month, credit) }
+      3.times { account.debit(account.starting_month, debit) }
+      expect(account.running_balance(account.starting_month)).to eq(account.starting_balance + 2 * credit - 3 * debit)
+    end
+  end
+
   describe '#transact' do
     let(:account) { build(:savings_account) }
     it 'should not fail' do

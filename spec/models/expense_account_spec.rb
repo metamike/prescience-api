@@ -225,6 +225,7 @@ describe ExpenseAccount, :type => :model do
 
   end
 
+  #TODO All of this should be logic for Expendable
   describe '#transact' do
 
     let(:scenario) { mock_model(Scenario) }
@@ -237,7 +238,7 @@ describe ExpenseAccount, :type => :model do
     context 'with insufficient funds' do
       let(:savings) { instance_double(SavingsAccount) }
       before :each do
-        allow(savings).to receive(:start_balance).with(account.starting_month).and_return(0)
+        allow(savings).to receive(:running_balance).with(account.starting_month).and_return(0)
         allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings])
       end
       it 'should fail' do
@@ -249,7 +250,7 @@ describe ExpenseAccount, :type => :model do
     context 'with sufficient funds' do
       let(:savings) { instance_double(SavingsAccount) }
       before :each do
-        allow(savings).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount + 50)
+        allow(savings).to receive(:running_balance).with(account.starting_month).and_return(account.starting_amount + 50)
         allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings])
       end
       it 'should debit the correct amount' do
@@ -264,9 +265,9 @@ describe ExpenseAccount, :type => :model do
       let(:savings2) { instance_double(SavingsAccount) }
       let(:savings3) { instance_double(SavingsAccount) }
       before :each do
-        allow(savings1).to receive(:start_balance).with(account.starting_month).and_return((account.starting_amount / 3).round(2))
-        allow(savings2).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount * 2)
-        allow(savings2).to receive(:start_balance).with(account.starting_month).and_return(account.starting_amount)
+        allow(savings1).to receive(:running_balance).with(account.starting_month).and_return((account.starting_amount / 3).round(2))
+        allow(savings2).to receive(:running_balance).with(account.starting_month).and_return(account.starting_amount * 2)
+        allow(savings2).to receive(:running_balance).with(account.starting_month).and_return(account.starting_amount)
         allow(scenario).to receive(:savings_accounts_by_interest_rate).and_return([savings1, savings2, savings3])
       end
       it 'should debit accounts in order' do
