@@ -16,8 +16,8 @@ module TaxFormBuilder
     form_set.instance_eval(&block)
   end
 
-  def self.run(scenario, tax_year)
-    form_set.run(scenario, tax_year)
+  def self.run(scenario, owner, tax_year)
+    form_set.run(scenario, owner, tax_year)
   end
 
 end

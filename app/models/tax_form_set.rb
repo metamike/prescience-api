@@ -8,8 +8,9 @@ class TaxFormSet
     @forms = {}
   end
 
-  def run(scenario, tax_year)
+  def run(scenario, owner, tax_year)
     @scenario = scenario
+    @owner = owner
     @tax_year = tax_year
     self
   end
@@ -20,17 +21,44 @@ class TaxFormSet
     @forms[name.to_s] = form
   end
 
-  def federal_income_tax_net
-    # find the cell w/ this name
-  end
-
-  def state_income_tax_net
+  def filing_status
+    # TODO support filing statuses
+    'single'
   end
 
   def wages
+    reduce_tax_year do |wages, month|
+      wages + @scenario.income_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.gross(month) }
+    end
+  end
+
+  def taxable_interest
+    reduce_tax_year do |interest, month|
+      interest + @scenario.savings_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.interest(month) }
+    end
+  end
+
+  def taxable_dividends
+    reduce_tax_year do |dividends, month|
+      dividends + @scenario.mutual_funds.where(owner_id, @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
+    end
+  end
+
+  def qualified_dividends
+    reduce_tax_year do |dividends, month|
+      dividends + @scenario.mutual_funds.where(owner_id, @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+    end
   end
 
   private
+
+  def reduce_tax_year
+    accum = 0
+    Month.new(@tax_year, 1).upto(Month.new(@tax_year, 12)) do |month|
+      accum = yield accum, month if block_given?
+    end
+    accum
+  end
 
   def method_missing(method, *arg)
     if method.to_s =~ FORM_REGEX

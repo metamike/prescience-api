@@ -84,7 +84,6 @@ class HomeEquityAccount < ActiveRecord::Base
   end
 
   def build_transaction_from_activity(activity)
-    puts "STARTING BALANCE FOR #{activity.month} IS #{starting_balance(activity.month)}"
     @transactions[activity.month] = {
       principal: activity.principal,
       interest: activity.interest,

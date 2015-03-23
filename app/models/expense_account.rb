@@ -3,6 +3,7 @@ class ExpenseAccount < ActiveRecord::Base
   include Expendable
 
   belongs_to :scenario
+  belongs_to :owner
 
   has_many :expense_account_activities, -> { order(:month) },
                                         after_add: :build_transaction_from_activity

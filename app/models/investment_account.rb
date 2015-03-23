@@ -1,4 +1,4 @@
-class MutualFund < ActiveRecord::Base
+class InvestmentAccount < ActiveRecord::Base
 
   belongs_to :scenario
 
@@ -92,9 +92,13 @@ class MutualFund < ActiveRecord::Base
     # no es nada
   end
 
+  def name
+    raise 'Subclasses must provide the human name of this fund'
+  end
+
   def summary(month)
     {
-      'mutual funds' => {
+      name => {
         'starting balance' => starting_balance(month),
         'bought' => bought(month),   # NOTE includes dividends!
         'sold' => sold(month),

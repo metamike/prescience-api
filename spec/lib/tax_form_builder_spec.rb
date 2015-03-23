@@ -36,6 +36,14 @@ describe TaxFormBuilder do
       end
     end
 
+    context 'with multiple calls' do
+      it 'should hold all forms' do
+        TaxFormBuilder.constructify { form '1040' }
+        TaxFormBuilder.constructify { form 'ca540' }
+        expect(TaxFormBuilder.form_set.forms.keys).to include('1040', 'ca540')
+      end
+    end
+
   end
 
   describe '.reset' do
