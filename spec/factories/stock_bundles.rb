@@ -3,8 +3,6 @@ FactoryGirl.define do
     month_bought { build(:month, year: 2014, month: 9) }
     amount       Faker::Number.number(6).to_i / 100.0
 
-    mutual_fund
-
     trait :with_activity do
       after :build do |bundle, evaluator|
         create(:stock_activity, month: bundle.month_bought, stock_bundle: bundle)

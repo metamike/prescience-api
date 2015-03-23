@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150316032706) do
+ActiveRecord::Schema.define(version: 20150325000058) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -38,6 +38,7 @@ ActiveRecord::Schema.define(version: 20150316032706) do
     t.string   "increase_schedule"
     t.datetime "created_at",                                 null: false
     t.datetime "updated_at",                                 null: false
+    t.integer  "owner_id"
   end
 
   add_index "expense_accounts", ["scenario_id"], name: "index_expense_accounts_on_scenario_id", using: :btree
@@ -68,9 +69,16 @@ ActiveRecord::Schema.define(version: 20150316032706) do
   create_table "income_account_activities", force: :cascade do |t|
     t.integer  "income_account_id"
     t.string   "month"
-    t.decimal  "gross",             precision: 9, scale: 2
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
+    t.decimal  "gross",                      precision: 9, scale: 2
+    t.datetime "created_at",                                         null: false
+    t.datetime "updated_at",                                         null: false
+    t.decimal  "federal_income_tax",         precision: 7, scale: 2
+    t.decimal  "social_security_tax",        precision: 6, scale: 2
+    t.decimal  "medicare_tax",               precision: 6, scale: 2
+    t.decimal  "state_income_tax",           precision: 7, scale: 2
+    t.decimal  "state_disability_tax",       precision: 6, scale: 2
+    t.decimal  "pretax_401k_contribution",   precision: 6, scale: 2
+    t.decimal  "aftertax_401k_contribution", precision: 6, scale: 2
   end
 
   add_index "income_account_activities", ["income_account_id"], name: "index_income_account_activities_on_income_account_id", using: :btree
@@ -88,7 +96,7 @@ ActiveRecord::Schema.define(version: 20150316032706) do
 
   add_index "income_accounts", ["owner_id"], name: "index_income_accounts_on_owner_id", using: :btree
 
-  create_table "mutual_funds", force: :cascade do |t|
+  create_table "investment_accounts", force: :cascade do |t|
     t.integer  "scenario_id"
     t.string   "name"
     t.string   "starting_month"
@@ -96,9 +104,10 @@ ActiveRecord::Schema.define(version: 20150316032706) do
     t.string   "quarterly_dividend_rate"
     t.datetime "created_at",              null: false
     t.datetime "updated_at",              null: false
+    t.string   "type"
   end
 
-  add_index "mutual_funds", ["scenario_id"], name: "index_mutual_funds_on_scenario_id", using: :btree
+  add_index "investment_accounts", ["scenario_id"], name: "index_investment_accounts_on_scenario_id", using: :btree
 
   create_table "owners", force: :cascade do |t|
     t.string   "name"
@@ -150,13 +159,13 @@ ActiveRecord::Schema.define(version: 20150316032706) do
   add_index "stock_activities", ["stock_bundle_id"], name: "index_stock_activities_on_stock_bundle_id", using: :btree
 
   create_table "stock_bundles", force: :cascade do |t|
-    t.integer  "mutual_fund_id"
+    t.integer  "investment_account_id"
     t.string   "month_bought"
-    t.decimal  "amount",         precision: 10, scale: 2
-    t.datetime "created_at",                              null: false
-    t.datetime "updated_at",                              null: false
+    t.decimal  "amount",                precision: 10, scale: 2
+    t.datetime "created_at",                                     null: false
+    t.datetime "updated_at",                                     null: false
   end
 
-  add_index "stock_bundles", ["mutual_fund_id"], name: "index_stock_bundles_on_mutual_fund_id", using: :btree
+  add_index "stock_bundles", ["investment_account_id"], name: "index_stock_bundles_on_investment_account_id", using: :btree
 
 end

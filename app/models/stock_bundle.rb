@@ -1,6 +1,6 @@
 class StockBundle < ActiveRecord::Base
 
-  belongs_to :mutual_fund
+  belongs_to :investment_account
 
   has_many :stock_activities, -> { order(:month) }
 

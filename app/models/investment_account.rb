@@ -92,13 +92,13 @@ class InvestmentAccount < ActiveRecord::Base
     # no es nada
   end
 
-  def name
+  def human_name
     raise 'Subclasses must provide the human name of this fund'
   end
 
   def summary(month)
     {
-      name => {
+      human_name => {
         'starting balance' => starting_balance(month),
         'bought' => bought(month),   # NOTE includes dividends!
         'sold' => sold(month),
