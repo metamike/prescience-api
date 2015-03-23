@@ -105,6 +105,7 @@ ActiveRecord::Schema.define(version: 20150325000058) do
     t.datetime "created_at",              null: false
     t.datetime "updated_at",              null: false
     t.string   "type"
+    t.integer  "owner_id"
   end
 
   add_index "investment_accounts", ["scenario_id"], name: "index_investment_accounts_on_scenario_id", using: :btree

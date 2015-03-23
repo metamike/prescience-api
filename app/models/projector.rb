@@ -26,7 +26,8 @@ class Projector
 
   def project_historicals(month)
     [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
-        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
+        @scenario.savings_accounts, @scenario.mutual_funds, @scenario.traditional401ks,
+        @scenario.roth401ks].each do |bundle|
       bundle.each { |a| a.project(month) }
     end
   end
@@ -35,7 +36,8 @@ class Projector
     buy_or_sell_stock(month)
 
     [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
-        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
+        @scenario.savings_accounts, @scenario.mutual_funds, @scenario.traditional401ks,
+        @scenario.roth401ks].each do |bundle|
       bundle.each { |a| a.project(month) }
       bundle.each { |a| a.transact(month) }
     end
@@ -89,7 +91,8 @@ class Projector
   def generate_report(month)
     accumulator = SummaryAccumulator.new
     [@scenario.income_accounts, @scenario.expense_accounts, @scenario.home_equity_accounts,
-        @scenario.savings_accounts, @scenario.mutual_funds].each do |bundle|
+        @scenario.savings_accounts, @scenario.mutual_funds, @scenario.traditional401ks,
+        @scenario.roth401ks].each do |bundle|
       bundle.each { |a| accumulator.merge(a.summary(month)) }
     end
     accumulator.summary

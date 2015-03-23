@@ -6,6 +6,8 @@ class Scenario < ActiveRecord::Base
   has_many :income_accounts
   has_many :expense_accounts
   has_many :mutual_funds
+  has_many :traditional401ks
+  has_many :roth401ks
   has_many :home_equity_accounts
 
   serialize :starting_month,    Month

@@ -1,6 +1,7 @@
 class InvestmentAccount < ActiveRecord::Base
 
   belongs_to :scenario
+  belongs_to :owner
 
   has_many :stock_bundles, after_add: :record_transactions_from_bundle
 

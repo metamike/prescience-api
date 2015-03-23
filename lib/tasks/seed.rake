@@ -118,6 +118,7 @@ end
 unless MutualFund.find_by_name('Vanguard Stock Fund')
   vanguard_stock_fund = MutualFund.create!(
     name: 'Vanguard Stock Fund',
+    owner: mike,
     starting_month: Month.new(2014, 1),
     monthly_interest_rate: RandomVariable.new(0.007, 0.0415),
     quarterly_dividend_rate: RandomVariable.new(0.0055, 0.0026)
