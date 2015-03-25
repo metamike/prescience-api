@@ -146,6 +146,27 @@ describe IncomeAccount, :type => :model do
       end
     end
 
+    context 'at start of a new year' do
+      let(:month) { build(:month, year: account.starting_month.year, month: 12) }
+      it 'should withhold social security and state disability taxes' do
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
+        account.starting_month = month
+        account.project(month)
+        account.project(month.next)
+        expect(account.gross(month.next)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::SOCIAL_SECURITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_DISABILITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(month.next)).to eq(tax)
+        expect(account.net(month.next)).to eq(account.gross(month.next) - tax)
+      end
+    end
+
     context 'well before state disability wage limit' do
       it 'should deduct state disability tax' do
         allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
