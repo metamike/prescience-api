@@ -1,5 +1,14 @@
 class IncomeAccount < ActiveRecord::Base
 
+  FEDERAL_INCOME_TAX_RATE = 0.2
+  SOCIAL_SECURITY_TAX_RATE = 0.062
+  MEDICARE_TAX_RATE = 0.0145
+  STATE_INCOME_TAX_RATE = 0.08
+  STATE_DISABILITY_TAX_RATE = 0.01
+
+  TAX_FIELDS = [:federal_income_tax, :social_security_tax, :medicare_tax,
+                :state_income_tax, :state_disability_tax]
+
   belongs_to :scenario
   belongs_to :owner
 
@@ -19,12 +28,28 @@ class IncomeAccount < ActiveRecord::Base
   after_initialize :init
 
   def project(month)
-    return if month < starting_month
-    @transactions[month] ||= (calc_gross(month) / 12.0).round(2)
+    return if month < starting_month || income_account_activities.find { |a| a.month == month }
+    @transactions[month] ||= {}
+    @transactions[month][:gross] ||= (calc_gross(month) / 12.0).round(2)
+    @transactions[month][:federal_income_tax] ||= calc_federal_income_tax(month, @transactions[month][:gross])
+    @transactions[month][:social_security_tax] ||= calc_social_security_tax(month, @transactions[month][:gross])
+    @transactions[month][:medicare_tax] ||= calc_medicare_tax(@transactions[month][:gross])
+    @transactions[month][:state_income_tax] ||= calc_state_income_tax(month, @transactions[month][:gross])
+    @transactions[month][:state_disability_tax] ||= calc_state_disability_tax(month, @transactions[month][:gross])
+    @transactions[month][:net] ||= calc_net(month)
   end
 
   def gross(month)
-    @transactions[month] || 0
+    @transactions[month] ? @transactions[month][:gross] : 0
+  end
+
+  def taxes(month)
+    return 0 unless @transactions[month]
+    TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] }
+  end
+
+  def net(month)
+    @transactions[month] ? @transactions[month][:net] : 0
   end
 
   def salary(month)
@@ -35,13 +60,15 @@ class IncomeAccount < ActiveRecord::Base
     raise "No income projected for #{month.to_s}" unless @transactions[month]
     savings_account = scenario.savings_account_by_owner(owner)
     raise "No savings account found for #{owner.name}" unless savings_account
-    savings_account.credit(month, @transactions[month])
+    savings_account.credit(month, @transactions[month][:net])
   end
 
   def summary(month)
     {
       'income' => {
-        'gross' => gross(month)
+        'gross' => gross(month),
+        'taxes' => taxes(month),
+        'net' => net(month)
       }
     }
   end
@@ -68,7 +95,10 @@ class IncomeAccount < ActiveRecord::Base
   end
 
   def build_transaction_from_activity(activity)
-    @transactions[activity.month] = activity.gross
+    @transactions[activity.month] = {}
+    ([:gross, :net] + TAX_FIELDS).each do |field|
+      @transactions[activity.month][field] = activity.send(field)
+    end
   end
 
   def calc_gross(month)
@@ -78,9 +108,63 @@ class IncomeAccount < ActiveRecord::Base
     @annual_salaries[month.year] = prior_salary * (1 + annual_raise)
   end
 
+  def calc_federal_income_tax(month, gross)
+    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner }
+    rate = (home_equity_account && home_equity_account.starting_balance(month) > 100000) ? FEDERAL_INCOME_TAX_RATE * 0.8 : FEDERAL_INCOME_TAX_RATE
+    (gross * rate).round(2)
+  end
+
+  def calc_social_security_tax(month, gross)
+    tax_info = scenario.tax_info
+    wages = ytd_wages(month)
+    if wages < tax_info.social_security_wage_limit_for_year(month.year)
+      (gross * SOCIAL_SECURITY_TAX_RATE).round(2)
+    elsif wages - gross < tax_info.social_security_wage_limit_for_year(month.year)
+      taxable = tax_info.social_security_wage_limit_for_year(month.year) - (wages - gross)
+      (taxable * SOCIAL_SECURITY_TAX_RATE).round(2)
+    else
+      0
+    end
+  end
+
+  def calc_medicare_tax(gross)
+    (gross * MEDICARE_TAX_RATE).round(2)
+  end
+
+  def calc_state_income_tax(month, gross)
+    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner }
+    rate = (home_equity_account && home_equity_account.starting_balance(month) > 100000) ? STATE_INCOME_TAX_RATE * 0.8 : STATE_INCOME_TAX_RATE
+    (gross * rate).round(2)
+  end
+
+  def calc_state_disability_tax(month, gross)
+    tax_info = scenario.tax_info
+    wages = ytd_wages(month)
+    if wages < tax_info.state_disability_wage_limit_for_year(month.year)
+      (gross * STATE_DISABILITY_TAX_RATE).round(2)
+    elsif wages - gross < tax_info.state_disability_wage_limit_for_year(month.year)
+      taxable = tax_info.state_disability_wage_limit_for_year(month.year) - (wages - gross)
+      (taxable * STATE_DISABILITY_TAX_RATE).round(2)
+    else
+      0
+    end
+  end
+
+  def calc_net(month)
+    @transactions[month][:gross] - TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] }
+  end
+
   def calc_raise(year)
     return 0 if year <= projections_start.year
     @annual_raises[year] ||= annual_raise.sample
+  end
+
+  def ytd_wages(month)
+    wages = 0
+    Month.new(month.year, 1).upto(month) do |m|
+      wages += gross(m)
+    end
+    wages
   end
 
   def projections_start

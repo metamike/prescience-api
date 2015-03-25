@@ -3,6 +3,7 @@ class HomeEquityAccount < ActiveRecord::Base
   include Expendable
 
   belongs_to :scenario
+  belongs_to :owner
 
   has_many :home_equity_account_activities, -> { order(:month) },
                                             after_add: :build_transaction_from_activity

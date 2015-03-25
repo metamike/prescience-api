@@ -2,9 +2,17 @@ require 'rails_helper'
 
 describe IncomeAccount, :type => :model do
 
-  # let(:savings) { mock_model(SavingsAccount, :[]= => nil) }
-  let(:account) { build(:income_account) }
   let(:activity) { build(:income_account_activity, month: account.starting_month) }
+  let(:scenario) { mock_model(Scenario) }
+  let(:tax_info) { instance_double(TaxInfo) }
+  let(:account) { build(:income_account, scenario: scenario) }
+
+  before :each do
+    allow(scenario).to receive(:home_equity_accounts).and_return([])
+    allow(scenario).to receive(:tax_info).and_return(tax_info)
+    allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(0)
+    allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(0)
+  end
 
   context 'validations' do
     it { should validate_presence_of(:name) }
@@ -38,6 +46,11 @@ describe IncomeAccount, :type => :model do
     account.income_account_activities << activity
     account.project(activity.month)
     expect(account.gross(activity.month)).to eq(activity.gross)
+    expect(account.taxes(activity.month)).to eq(
+      activity.federal_income_tax + activity.social_security_tax + activity.medicare_tax +
+        activity.state_income_tax + activity.state_disability_tax
+    )
+    expect(account.net(activity.month)).to eq(activity.net)
   end
 
   it 'should calculate when it has no activity' do
@@ -47,7 +60,7 @@ describe IncomeAccount, :type => :model do
 
   context 'with annual raise' do
 
-    let(:account) { build(:income_account, :with_raise) }
+    let(:account) { build(:income_account, :with_raise, scenario: scenario) }
 
     it 'should account for an annual raise' do
       current = account.starting_month
@@ -80,7 +93,7 @@ describe IncomeAccount, :type => :model do
 
   context 'with uncertain raise' do
 
-    let(:account) { build(:income_account, :uncertain_raise, starting_month: Month.new(2014, 12)) }
+    let(:account) { build(:income_account, :uncertain_raise, scenario: scenario, starting_month: Month.new(2014, 12)) }
     let(:rand_values) { [0.0007575949881074517, -0.0001] }
 
     it 'should sample from a normal distribution to determine raises' do
@@ -97,7 +110,6 @@ describe IncomeAccount, :type => :model do
 
   describe '#transact' do
 
-    let(:scenario) { mock_model(Scenario) }
     let(:account) { build(:income_account, scenario: scenario) }
     let(:savings) { instance_double(SavingsAccount) }
 
@@ -124,7 +136,7 @@ describe IncomeAccount, :type => :model do
       it 'should credit the savings account' do
         allow(scenario).to receive(:savings_account_by_owner).with(account.owner).and_return(savings)
         account.project(account.starting_month)
-        expect(savings).to receive(:credit).with(account.starting_month, account.gross(account.starting_month))
+        expect(savings).to receive(:credit).with(account.starting_month, account.net(account.starting_month))
         account.transact(account.starting_month)
       end
     end
@@ -133,16 +145,20 @@ describe IncomeAccount, :type => :model do
 
   describe '#summary' do
 
-    let(:account) { build(:income_account) }
+    let(:account) { build(:income_account, scenario: scenario) }
 
     it 'should return zero when not projected' do
-      expected = {'income' => {'gross' => 0}}
+      expected = {'income' => {'gross' => 0, 'taxes' => 0, 'net' => 0}}
       expect(account.summary(account.starting_month)).to eq(expected)
     end
 
-    it 'should return gross income when projected' do
+    it 'should return income summary when projected' do
       account.project(account.starting_month)
-      expected = {'income' => {'gross' => account.gross(account.starting_month)}}
+      expected = {'income' => {
+        'gross' => account.gross(account.starting_month),
+        'taxes' => account.taxes(account.starting_month),
+        'net' => account.net(account.starting_month)
+      }}
       expect(account.summary(account.starting_month)).to eq(expected)
     end
 

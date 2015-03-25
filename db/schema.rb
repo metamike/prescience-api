@@ -62,6 +62,7 @@ ActiveRecord::Schema.define(version: 20150325000058) do
     t.decimal  "interest_rate",    precision: 6,  scale: 5
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
+    t.integer  "owner_id"
   end
 
   add_index "home_equity_accounts", ["scenario_id"], name: "index_home_equity_accounts_on_scenario_id", using: :btree
@@ -79,6 +80,7 @@ ActiveRecord::Schema.define(version: 20150325000058) do
     t.decimal  "state_disability_tax",       precision: 6, scale: 2
     t.decimal  "pretax_401k_contribution",   precision: 6, scale: 2
     t.decimal  "aftertax_401k_contribution", precision: 6, scale: 2
+    t.decimal  "net",                        precision: 9, scale: 2
   end
 
   add_index "income_account_activities", ["income_account_id"], name: "index_income_account_activities_on_income_account_id", using: :btree
@@ -145,6 +147,7 @@ ActiveRecord::Schema.define(version: 20150325000058) do
     t.datetime "updated_at",        null: false
     t.string   "projections_start"
     t.string   "starting_month"
+    t.integer  "tax_info_id"
   end
 
   create_table "stock_activities", force: :cascade do |t|
@@ -168,5 +171,18 @@ ActiveRecord::Schema.define(version: 20150325000058) do
   end
 
   add_index "stock_bundles", ["investment_account_id"], name: "index_stock_bundles_on_investment_account_id", using: :btree
+
+  create_table "tax_infos", force: :cascade do |t|
+    t.integer  "starting_year"
+    t.decimal  "social_security_wage_limit",              precision: 9, scale: 2
+    t.string   "social_security_wage_limit_growth_rate"
+    t.decimal  "state_disability_wage_limit",             precision: 9, scale: 2
+    t.string   "state_disability_wage_limit_growth_rate"
+    t.integer  "scenario_id"
+    t.datetime "created_at",                                                      null: false
+    t.datetime "updated_at",                                                      null: false
+  end
+
+  add_index "tax_infos", ["scenario_id"], name: "index_tax_infos_on_scenario_id", using: :btree
 
 end

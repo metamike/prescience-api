@@ -20,6 +20,7 @@ describe 'Prescience Backend' do
   let(:scenario) { create(:scenario) }
 
   it 'should generate actuals' do
+    pending 'reworking of this test'
     scenario.starting_month = Month.new(2014, 1)
     scenario.projections_start = Month.new(2014, 2)
     savings_account_low.savings_account_activities << savings_account_activity_low

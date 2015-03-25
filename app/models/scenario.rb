@@ -2,6 +2,8 @@ class Scenario < ActiveRecord::Base
 
   validates :name, presence: true, uniqueness: true
 
+  has_one :tax_info
+
   has_many :savings_accounts
   has_many :income_accounts
   has_many :expense_accounts
