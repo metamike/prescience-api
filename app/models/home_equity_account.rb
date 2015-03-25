@@ -55,6 +55,10 @@ class HomeEquityAccount < ActiveRecord::Base
     @transactions[month] ? @transactions[month][:ending_balance] : 0
   end
 
+  def almost_paid_off?(month)
+    starting_balance(month) < loan_amount / 3   # Last ~7 years
+  end
+
   def summary(month)
     {
       'home equity' => {

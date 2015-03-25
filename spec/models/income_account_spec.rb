@@ -5,7 +5,8 @@ describe IncomeAccount, :type => :model do
   let(:activity) { build(:income_account_activity, month: account.starting_month) }
   let(:scenario) { mock_model(Scenario) }
   let(:tax_info) { instance_double(TaxInfo) }
-  let(:account) { build(:income_account, scenario: scenario) }
+  let(:account)  { build(:income_account, scenario: scenario) }
+  let(:home_equity_account) { instance_double(HomeEquityAccount) }
 
   before :each do
     allow(scenario).to receive(:home_equity_accounts).and_return([])
@@ -38,72 +39,189 @@ describe IncomeAccount, :type => :model do
     end
   end
 
-  it 'should return a default value for a non-projected month' do
-    expect(account.gross(account.starting_month.next)).to eq(0)
-  end
+  describe '#project' do
 
-  it 'should use activity if present' do
-    account.income_account_activities << activity
-    account.project(activity.month)
-    expect(account.gross(activity.month)).to eq(activity.gross)
-    expect(account.taxes(activity.month)).to eq(
-      activity.federal_income_tax + activity.social_security_tax + activity.medicare_tax +
-        activity.state_income_tax + activity.state_disability_tax
-    )
-    expect(account.net(activity.month)).to eq(activity.net)
-  end
-
-  it 'should calculate when it has no activity' do
-    account.project(account.starting_month)
-    expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
-  end
-
-  context 'with annual raise' do
-
-    let(:account) { build(:income_account, :with_raise, scenario: scenario) }
-
-    it 'should account for an annual raise' do
-      current = account.starting_month
-      0.upto(24) do |i|
-        account.project(current)
-        rate = (1 + account.annual_raise.mean) ** current.year_diff(account.starting_month)
-        expect(account.gross(current)).to eq((account.annual_salary * rate / 12.0).round(2))
-        current = current.next
-      end
+    it 'should return default values for a non-projected month' do
+      expect(account.gross(account.starting_month.next)).to eq(0)
+      expect(account.taxes(account.starting_month.next)).to eq(0)
+      expect(account.net(account.starting_month.next)).to eq(0)
     end
 
-    it 'should begin the raise process only after historicals' do
-      current = account.starting_month
-      18.times do   # makes sure it skips a year
-        activity = build(:income_account_activity, month: current)
+    context 'with historicals' do
+      it 'should use those values' do
         account.income_account_activities << activity
-        current = current.next
+        account.project(activity.month)
+        expect(account.gross(activity.month)).to eq(activity.gross)
+        expect(account.taxes(activity.month)).to eq(
+          activity.federal_income_tax + activity.social_security_tax + activity.medicare_tax +
+            activity.state_income_tax + activity.state_disability_tax
+        )
+        expect(account.net(activity.month)).to eq(activity.net)
       end
-      account.project(current)
-      expect(account.gross(current)).to eq((account.annual_salary / 12.0).round(2))
-      loop do
-        current = current.next
-        account.project(current)
-        break if current.year != account.income_account_activities.last.month.year
-      end
-      expect(account.gross(current)).to eq((account.annual_salary * (1 + account.annual_raise.mean) / 12.0).round(2))
     end
 
-  end
+    context 'with no mortgage' do
+      it 'should use a higher tax rate' do
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
 
-  context 'with uncertain raise' do
+    context 'with a mortgage owned by someone else' do
+      it 'should not impact taxes' do
+        allow(home_equity_account).to receive(:owner).and_return(nil)
+        allow(home_equity_account).to receive(:almost_paid_off?).and_return(false)
+        allow(scenario).to receive(:home_equity_accounts).and_return([home_equity_account])
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
 
-    let(:account) { build(:income_account, :uncertain_raise, scenario: scenario, starting_month: Month.new(2014, 12)) }
-    let(:rand_values) { [0.0007575949881074517, -0.0001] }
+    context 'with a mortgage close to being paid' do
+      it 'should use a higher tax rate' do
+        allow(home_equity_account).to receive(:owner).and_return(account.owner)
+        allow(home_equity_account).to receive(:almost_paid_off?).and_return(true)
+        allow(scenario).to receive(:home_equity_accounts).and_return([home_equity_account])
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
 
-    it 'should sample from a normal distribution to determine raises' do
-      allow(account.annual_raise).to receive(:sample).and_return(*rand_values)
-      month = account.starting_month
-      account.project(month)
-      expect(account.gross(month)).to eq((account.annual_salary / 12.0).round(2))
-      month = month.next
-      account.project(month)
-      expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_salary / 12.0).round(2))
+    context 'with a mortgage not close to being paid' do
+      it 'should use a lower tax rate' do
+        allow(home_equity_account).to receive(:owner).and_return(account.owner)
+        allow(home_equity_account).to receive(:almost_paid_off?).and_return(false)
+        allow(scenario).to receive(:home_equity_accounts).and_return([home_equity_account])
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::HOME_EQUITY_REDUCTION * IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::HOME_EQUITY_REDUCTION * IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
+
+    context 'well before social security wage limit' do
+      it 'should deduct social security tax' do
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::SOCIAL_SECURITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
+
+    context 'coming up on social security wage limit' do
+      it 'should deduct partial social security tax' do
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary * 1.5 / 12)
+        account.project(account.starting_month)
+        account.project(account.starting_month.next)
+        expect(account.gross(account.starting_month.next)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (0.5 * IncomeAccount::SOCIAL_SECURITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month.next)).to eq(tax)
+        expect(account.net(account.starting_month.next)).to eq(account.gross(account.starting_month.next) - tax)
+      end
+    end
+
+    context 'well before state disability wage limit' do
+      it 'should deduct state disability tax' do
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_DISABILITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(account.gross(account.starting_month) - tax)
+      end
+    end
+
+    context 'coming up on state disability wage limit' do
+      it 'should deduct partial state disability tax' do
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary * 1.5 / 12)
+        account.project(account.starting_month)
+        account.project(account.starting_month.next)
+        expect(account.gross(account.starting_month.next)).to eq((account.annual_salary / 12.0).round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
+        tax += (0.5 * IncomeAccount::STATE_DISABILITY_TAX_RATE * account.annual_salary / 12.0).round(2)
+        expect(account.taxes(account.starting_month.next)).to eq(tax)
+        expect(account.net(account.starting_month.next)).to eq(account.gross(account.starting_month.next) - tax)
+      end
+    end
+
+    context 'with annual raise' do
+
+      let(:account) { build(:income_account, :with_raise, scenario: scenario) }
+
+      it 'should account for an annual raise' do
+        current = account.starting_month
+        0.upto(24) do |i|
+          account.project(current)
+          rate = (1 + account.annual_raise.mean) ** current.year_diff(account.starting_month)
+          expect(account.gross(current)).to eq((account.annual_salary * rate / 12.0).round(2))
+          current = current.next
+        end
+      end
+
+      it 'should begin the raise process only after historicals' do
+        current = account.starting_month
+        18.times do   # makes sure it skips a year
+          activity = build(:income_account_activity, month: current)
+          account.income_account_activities << activity
+          current = current.next
+        end
+        account.project(current)
+        expect(account.gross(current)).to eq((account.annual_salary / 12.0).round(2))
+        loop do
+          current = current.next
+          account.project(current)
+          break if current.year != account.income_account_activities.last.month.year
+        end
+        expect(account.gross(current)).to eq((account.annual_salary * (1 + account.annual_raise.mean) / 12.0).round(2))
+      end
+
+    end
+
+    context 'with uncertain raise' do
+
+      let(:account) { build(:income_account, :uncertain_raise, scenario: scenario, starting_month: Month.new(2014, 12)) }
+      let(:rand_values) { [0.0007575949881074517, -0.0001] }
+
+      it 'should sample from a normal distribution to determine raises' do
+        allow(account.annual_raise).to receive(:sample).and_return(*rand_values)
+        month = account.starting_month
+        account.project(month)
+        expect(account.gross(month)).to eq((account.annual_salary / 12.0).round(2))
+        month = month.next
+        account.project(month)
+        expect(account.gross(month)).to eq(((1 + rand_values[0]) * account.annual_salary / 12.0).round(2))
+      end
     end
 
   end

@@ -102,6 +102,35 @@ describe HomeEquityAccount, type: :model do
 
   end
 
+  describe '#almost_paid_off?' do
+    let(:account) { build(:home_equity_account) }
+    context 'when loan is starting' do
+      it 'should return false' do
+        expect(account.almost_paid_off?(account.month_bought)).to be(false)
+      end
+    end
+    context 'when halfway through loan term' do
+      it 'should return false' do
+        current = account.month_bought
+        ((account.loan_term_months / 2).floor).times do
+          account.project(current)
+          current = current.next
+        end
+        expect(account.almost_paid_off?(current)).to be(false)
+      end
+    end
+    context 'when near end of loan term' do
+      it 'should return true' do
+        current = account.month_bought
+        ((account.loan_term_months * 0.9).floor).times do
+          account.project(current)
+          current = current.next
+        end
+        expect(account.almost_paid_off?(current)).to be(true)
+      end
+    end
+  end
+
   describe '#transact' do
 
     let(:account) { build(:home_equity_account) }

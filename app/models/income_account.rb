@@ -5,6 +5,7 @@ class IncomeAccount < ActiveRecord::Base
   MEDICARE_TAX_RATE = 0.0145
   STATE_INCOME_TAX_RATE = 0.08
   STATE_DISABILITY_TAX_RATE = 0.01
+  HOME_EQUITY_REDUCTION = 0.8
 
   TAX_FIELDS = [:federal_income_tax, :social_security_tax, :medicare_tax,
                 :state_income_tax, :state_disability_tax]
@@ -109,8 +110,8 @@ class IncomeAccount < ActiveRecord::Base
   end
 
   def calc_federal_income_tax(month, gross)
-    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner }
-    rate = (home_equity_account && home_equity_account.starting_balance(month) > 100000) ? FEDERAL_INCOME_TAX_RATE * 0.8 : FEDERAL_INCOME_TAX_RATE
+    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
+    rate = home_equity_account ? FEDERAL_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : FEDERAL_INCOME_TAX_RATE
     (gross * rate).round(2)
   end
 
@@ -132,8 +133,8 @@ class IncomeAccount < ActiveRecord::Base
   end
 
   def calc_state_income_tax(month, gross)
-    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner }
-    rate = (home_equity_account && home_equity_account.starting_balance(month) > 100000) ? STATE_INCOME_TAX_RATE * 0.8 : STATE_INCOME_TAX_RATE
+    home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
+    rate = home_equity_account ? STATE_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : STATE_INCOME_TAX_RATE
     (gross * rate).round(2)
   end
 
