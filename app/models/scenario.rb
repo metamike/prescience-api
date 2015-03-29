@@ -32,6 +32,10 @@ class Scenario < ActiveRecord::Base
     [traditional401ks, roth401ks].map { |bundle| bundle.find { |a| a.owner == owner && a.active? }  }.compact
   end
 
+  def commuter_account_by_owner(owner)
+    expense_accounts.find { |a| a.owner == owner && a.name == 'Commuter' }
+  end
+
   private
 
   def one_401k_per_owner

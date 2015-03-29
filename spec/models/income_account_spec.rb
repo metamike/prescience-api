@@ -11,6 +11,7 @@ describe IncomeAccount, :type => :model do
   before :each do
     allow(scenario).to receive(:home_equity_accounts).and_return([])
     allow(scenario).to receive(:tax_info).and_return(tax_info)
+    allow(scenario).to receive(:commuter_account_by_owner)
     allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(0)
     allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(0)
   end
@@ -233,6 +234,28 @@ describe IncomeAccount, :type => :model do
         expect(account.taxes(account.starting_month)).to eq(tax)
         expect(account.contributions_to_401k(account.starting_month)).to eq(contribution)
         expect(account.net(account.starting_month)).to eq(monthly.round(2) - tax - contribution)
+      end
+    end
+
+    context 'with commuter benefits' do
+      let(:commuter_account) { instance_double(ExpenseAccount) }
+      it 'should count them as pretax deductions' do
+        monthly = account.annual_salary / 12.0
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        allow(scenario).to receive(:commuter_account_by_owner).with(account.owner).and_return(commuter_account)
+        expect(commuter_account).to receive(:project).with(account.starting_month)
+        contribution = (monthly / 10.0).round(2)
+        allow(commuter_account).to receive(:amount).with(account.starting_month).and_return(contribution)
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq(monthly.round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::SOCIAL_SECURITY_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::STATE_DISABILITY_TAX_RATE * (monthly - contribution)).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.net(account.starting_month)).to eq(monthly.round(2) - tax)
       end
     end
 

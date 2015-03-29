@@ -32,6 +32,7 @@ class IncomeAccount < ActiveRecord::Base
     return if month < starting_month || income_account_activities.find { |a| a.month == month }
     @transactions[month] ||= {}
     @transactions[month][:gross] ||= (calc_gross(month) / 12.0).round(2)
+    @transactions[month][:commuter_benefits] ||= calc_commuter_benefits(month)
     @transactions[month][:pretax_401k_contribution] ||= 0
     @transactions[month][:aftertax_401k_contribution] ||= 0
     @transactions[month][:federal_income_tax] ||= calc_federal_income_tax(month, @transactions[month][:gross])
@@ -135,43 +136,50 @@ class IncomeAccount < ActiveRecord::Base
     @annual_salaries[month.year] = prior_salary * (1 + annual_raise)
   end
 
+  def calc_commuter_benefits(month)
+    account = scenario.commuter_account_by_owner(owner)
+    return 0 unless account
+    account.project(month)
+    account.amount(month)
+  end
+
   def calc_federal_income_tax(month, gross)
     home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
     rate = home_equity_account ? FEDERAL_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : FEDERAL_INCOME_TAX_RATE
-    ((gross - @transactions[month][:pretax_401k_contribution]) * rate).round(2)
+    ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * rate).round(2)
   end
 
   def calc_social_security_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
     if wages < tax_info.social_security_wage_limit_for_year(month.year)
-      ((gross - @transactions[month][:pretax_401k_contribution]) * SOCIAL_SECURITY_TAX_RATE).round(2)
+      ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * SOCIAL_SECURITY_TAX_RATE).round(2)
     elsif wages - gross < tax_info.social_security_wage_limit_for_year(month.year)
       taxable = tax_info.social_security_wage_limit_for_year(month.year) - (wages - gross)
-      ((taxable - @transactions[month][:pretax_401k_contribution]) * SOCIAL_SECURITY_TAX_RATE).round(2)
+      ((taxable - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * SOCIAL_SECURITY_TAX_RATE).round(2)
     else
       0
     end
   end
 
   def calc_medicare_tax(month, gross)
-    ((gross - @transactions[month][:pretax_401k_contribution]) * MEDICARE_TAX_RATE).round(2)
+    ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * MEDICARE_TAX_RATE).round(2)
   end
 
   def calc_state_income_tax(month, gross)
     home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
     rate = home_equity_account ? STATE_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : STATE_INCOME_TAX_RATE
-    ((gross - @transactions[month][:pretax_401k_contribution]) * rate).round(2)
+    ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * rate).round(2)
   end
 
   def calc_state_disability_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
     if wages < tax_info.state_disability_wage_limit_for_year(month.year)
-      ((gross - @transactions[month][:pretax_401k_contribution]) * STATE_DISABILITY_TAX_RATE).round(2)
+      ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * STATE_DISABILITY_TAX_RATE).round(2)
     elsif wages - gross < tax_info.state_disability_wage_limit_for_year(month.year)
       taxable = tax_info.state_disability_wage_limit_for_year(month.year) - (wages - gross)
-      ((taxable - @transactions[month][:pretax_401k_contribution]) * STATE_DISABILITY_TAX_RATE).round(2)
+      ((taxable - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * STATE_DISABILITY_TAX_RATE).round(2)
     else
       0
     end

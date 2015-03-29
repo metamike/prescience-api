@@ -141,4 +141,36 @@ describe Scenario, :type => :model do
     end
   end
 
+  describe '#commuter_account_by_owner' do
+    let(:owner) { instance_double(Owner) }
+    let(:owner2) { instance_double(Owner) }
+    let(:expense_account) { mock_model(ExpenseAccount) }
+
+    before :each do
+      allow(expense_account).to receive(:owner)
+      scenario.expense_accounts << expense_account
+    end
+
+    context 'with no accounts' do
+      it 'should return nil' do
+        expect(scenario.commuter_account_by_owner(owner)).to be_nil
+      end
+    end
+
+    context 'with accounts' do
+      let(:commuter) { mock_model(ExpenseAccount) }
+      let(:commuter2) { mock_model(ExpenseAccount) }
+      it 'should return the owner''s commuter account' do
+        [commuter, commuter2].each do |account|
+          allow(account).to receive(:name).and_return('Commuter')
+        end
+        allow(commuter).to receive(:owner).and_return(owner)
+        allow(commuter2).to receive(:owner).and_return(owner2)
+        scenario.expense_accounts += [commuter, commuter2]
+        expect(scenario.commuter_account_by_owner(owner)).to eq(commuter)
+      end
+    end
+
+  end
+
 end

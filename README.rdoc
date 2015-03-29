@@ -16,9 +16,9 @@
 - DSL For taxes
 - Payroll Taxes
 - 401k contributions
-TODO commuter benefits
-TODO 401(k) rollovers
+- commuter benefits
 TODO Annual Income Taxes
+TODO 401(k) rollovers
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses
