@@ -15,21 +15,21 @@
 - Mortgages
 - DSL For taxes
 - Payroll Taxes
-TODO 401k contributions
- - do we need to compute 401k before taxes? (pretax and all)
+- 401k contributions
 TODO commuter benefits
 TODO 401(k) rollovers
 TODO Annual Income Taxes
-TODO Equity
 TODO One-Time Expenses
 TODO Travel
 TODO Bonuses
+TODO Equity
 TODO Other Income
 TODO Rental Property
 TODO Sell a Property
 TODO Car
 TODO Utilities
-TODO 401(k)'s and IRAs
+TODO IRAs
+TODO 401(k) and IRA distributions
 TODO individual stocks (options?)
 TODO Bond accounts
 TODO Scenario ancestry
