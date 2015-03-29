@@ -55,6 +55,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'simplecov'
   gem 'factory_girl_rails'
   gem 'faker'
   gem 'rspec-rails'
