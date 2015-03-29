@@ -4,7 +4,7 @@ class IncomeAccount < ActiveRecord::Base
   SOCIAL_SECURITY_TAX_RATE = 0.062
   MEDICARE_TAX_RATE = 0.0145
   STATE_INCOME_TAX_RATE = 0.08
-  STATE_DISABILITY_TAX_RATE = 0.01
+  STATE_DISABILITY_TAX_RATE = 0.009
   HOME_EQUITY_REDUCTION = 0.8
 
   TAX_FIELDS = [:federal_income_tax, :social_security_tax, :medicare_tax,
@@ -32,9 +32,11 @@ class IncomeAccount < ActiveRecord::Base
     return if month < starting_month || income_account_activities.find { |a| a.month == month }
     @transactions[month] ||= {}
     @transactions[month][:gross] ||= (calc_gross(month) / 12.0).round(2)
+    @transactions[month][:pretax_401k_contribution] ||= 0
+    @transactions[month][:aftertax_401k_contribution] ||= 0
     @transactions[month][:federal_income_tax] ||= calc_federal_income_tax(month, @transactions[month][:gross])
     @transactions[month][:social_security_tax] ||= calc_social_security_tax(month, @transactions[month][:gross])
-    @transactions[month][:medicare_tax] ||= calc_medicare_tax(@transactions[month][:gross])
+    @transactions[month][:medicare_tax] ||= calc_medicare_tax(month, @transactions[month][:gross])
     @transactions[month][:state_income_tax] ||= calc_state_income_tax(month, @transactions[month][:gross])
     @transactions[month][:state_disability_tax] ||= calc_state_disability_tax(month, @transactions[month][:gross])
     @transactions[month][:net] ||= calc_net(month)
@@ -49,8 +51,31 @@ class IncomeAccount < ActiveRecord::Base
     TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] }
   end
 
+  def contributions_to_401k(month)
+    return 0 unless @transactions[month]
+    (@transactions[month][:pretax_401k_contribution] || 0) + (@transactions[month][:aftertax_401k_contribution] || 0)
+  end
+
   def net(month)
     @transactions[month] ? @transactions[month][:net] : 0
+  end
+
+  def record_pretax_401k_contribution(month, amount)
+    @transactions[month] ||= {}
+    @transactions[month][:pretax_401k_contribution] ||= 0
+    @transactions[month][:pretax_401k_contribution] += amount
+  end
+
+  def record_aftertax_401k_contribution(month, amount)
+    @transactions[month] ||= {}
+    @transactions[month][:aftertax_401k_contribution] ||= 0
+    @transactions[month][:aftertax_401k_contribution] += amount
+  end
+
+  def ytd_401k_contributions(month)
+    contributions = 0
+    Month.new(month.year, 1).upto(month) { |m| contributions += contributions_to_401k(month) }
+    contributions
   end
 
   def salary(month)
@@ -69,6 +94,7 @@ class IncomeAccount < ActiveRecord::Base
       'income' => {
         'gross' => gross(month),
         'taxes' => taxes(month),
+        '401k' => contributions_to_401k(month),
         'net' => net(month)
       }
     }
@@ -97,7 +123,7 @@ class IncomeAccount < ActiveRecord::Base
 
   def build_transaction_from_activity(activity)
     @transactions[activity.month] = {}
-    ([:gross, :net] + TAX_FIELDS).each do |field|
+    ([:gross, :net, :pretax_401k_contribution, :aftertax_401k_contribution] + TAX_FIELDS).each do |field|
       @transactions[activity.month][field] = activity.send(field)
     end
   end
@@ -112,47 +138,47 @@ class IncomeAccount < ActiveRecord::Base
   def calc_federal_income_tax(month, gross)
     home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
     rate = home_equity_account ? FEDERAL_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : FEDERAL_INCOME_TAX_RATE
-    (gross * rate).round(2)
+    ((gross - @transactions[month][:pretax_401k_contribution]) * rate).round(2)
   end
 
   def calc_social_security_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
     if wages < tax_info.social_security_wage_limit_for_year(month.year)
-      (gross * SOCIAL_SECURITY_TAX_RATE).round(2)
+      ((gross - @transactions[month][:pretax_401k_contribution]) * SOCIAL_SECURITY_TAX_RATE).round(2)
     elsif wages - gross < tax_info.social_security_wage_limit_for_year(month.year)
       taxable = tax_info.social_security_wage_limit_for_year(month.year) - (wages - gross)
-      (taxable * SOCIAL_SECURITY_TAX_RATE).round(2)
+      ((taxable - @transactions[month][:pretax_401k_contribution]) * SOCIAL_SECURITY_TAX_RATE).round(2)
     else
       0
     end
   end
 
-  def calc_medicare_tax(gross)
-    (gross * MEDICARE_TAX_RATE).round(2)
+  def calc_medicare_tax(month, gross)
+    ((gross - @transactions[month][:pretax_401k_contribution]) * MEDICARE_TAX_RATE).round(2)
   end
 
   def calc_state_income_tax(month, gross)
     home_equity_account = scenario.home_equity_accounts.find { |a| a.owner == owner && !a.almost_paid_off?(month) }
     rate = home_equity_account ? STATE_INCOME_TAX_RATE * HOME_EQUITY_REDUCTION : STATE_INCOME_TAX_RATE
-    (gross * rate).round(2)
+    ((gross - @transactions[month][:pretax_401k_contribution]) * rate).round(2)
   end
 
   def calc_state_disability_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
     if wages < tax_info.state_disability_wage_limit_for_year(month.year)
-      (gross * STATE_DISABILITY_TAX_RATE).round(2)
+      ((gross - @transactions[month][:pretax_401k_contribution]) * STATE_DISABILITY_TAX_RATE).round(2)
     elsif wages - gross < tax_info.state_disability_wage_limit_for_year(month.year)
       taxable = tax_info.state_disability_wage_limit_for_year(month.year) - (wages - gross)
-      (taxable * STATE_DISABILITY_TAX_RATE).round(2)
+      ((taxable - @transactions[month][:pretax_401k_contribution]) * STATE_DISABILITY_TAX_RATE).round(2)
     else
       0
     end
   end
 
   def calc_net(month)
-    @transactions[month][:gross] - TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] }
+    @transactions[month][:gross] - (@transactions[month][:pretax_401k_contribution] + @transactions[month][:aftertax_401k_contribution] + TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] })
   end
 
   def calc_raise(year)
@@ -162,9 +188,7 @@ class IncomeAccount < ActiveRecord::Base
 
   def ytd_wages(month)
     wages = 0
-    Month.new(month.year, 1).upto(month) do |m|
-      wages += gross(m)
-    end
+    Month.new(month.year, 1).upto(month) { |m| wages += gross(m) }
     wages
   end
 

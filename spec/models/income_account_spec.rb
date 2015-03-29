@@ -196,6 +196,46 @@ describe IncomeAccount, :type => :model do
       end
     end
 
+    context 'with pretax 401(k) contributions' do
+      it 'should deduct them from the gross' do
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        contribution = (account.annual_salary / 12 / 2.0).round(2)
+        monthly = account.annual_salary / 12.0
+        account.record_pretax_401k_contribution(account.starting_month, contribution)
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq(monthly.round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::SOCIAL_SECURITY_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * (monthly - contribution)).round(2)
+        tax += (IncomeAccount::STATE_DISABILITY_TAX_RATE * (monthly - contribution)).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.contributions_to_401k(account.starting_month)).to eq(contribution)
+        expect(account.net(account.starting_month)).to eq(monthly.round(2) - tax - contribution)
+      end
+    end
+
+    context 'with aftertax 401(k) contributions' do
+      it 'should not deduct them from the gross' do
+        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        contribution = (account.annual_salary / 12 / 2.0).round(2)
+        monthly = account.annual_salary / 12.0
+        account.record_aftertax_401k_contribution(account.starting_month, contribution)
+        account.project(account.starting_month)
+        expect(account.gross(account.starting_month)).to eq(monthly.round(2))
+        tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * monthly).round(2)
+        tax += (IncomeAccount::SOCIAL_SECURITY_TAX_RATE * monthly).round(2)
+        tax += (IncomeAccount::MEDICARE_TAX_RATE * monthly).round(2)
+        tax += (IncomeAccount::STATE_INCOME_TAX_RATE * monthly).round(2)
+        tax += (IncomeAccount::STATE_DISABILITY_TAX_RATE * monthly).round(2)
+        expect(account.taxes(account.starting_month)).to eq(tax)
+        expect(account.contributions_to_401k(account.starting_month)).to eq(contribution)
+        expect(account.net(account.starting_month)).to eq(monthly.round(2) - tax - contribution)
+      end
+    end
+
     context 'with annual raise' do
 
       let(:account) { build(:income_account, :with_raise, scenario: scenario) }
@@ -287,7 +327,7 @@ describe IncomeAccount, :type => :model do
     let(:account) { build(:income_account, scenario: scenario) }
 
     it 'should return zero when not projected' do
-      expected = {'income' => {'gross' => 0, 'taxes' => 0, 'net' => 0}}
+      expected = {'income' => {'gross' => 0, 'taxes' => 0, '401k' => 0, 'net' => 0}}
       expect(account.summary(account.starting_month)).to eq(expected)
     end
 
@@ -296,6 +336,7 @@ describe IncomeAccount, :type => :model do
       expected = {'income' => {
         'gross' => account.gross(account.starting_month),
         'taxes' => account.taxes(account.starting_month),
+        '401k' => account.contributions_to_401k(account.starting_month),
         'net' => account.net(account.starting_month)
       }}
       expect(account.summary(account.starting_month)).to eq(expected)

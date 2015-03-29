@@ -2,11 +2,13 @@ class TaxInfo < ActiveRecord::Base
 
   serialize :social_security_wage_limit_growth_rate, RandomVariable
   serialize :state_disability_wage_limit_growth_rate, RandomVariable
+  serialize :annual_401k_contribution_limit_growth_rate, RandomVariable
 
   validates :starting_year, presence: true, numericality: true
 
   validates :social_security_wage_limit, presence: true, numericality: true
   validates :state_disability_wage_limit, presence: true, numericality: true
+  validates :annual_401k_contribution_limit, presence: true, numericality: true
 
   after_initialize :init
 
@@ -18,12 +20,14 @@ class TaxInfo < ActiveRecord::Base
     growing_value(year, :state_disability_wage_limit)
   end
 
+  def annual_401k_contribution_limit_for_year(year)
+    growing_value(year, :annual_401k_contribution_limit)
+  end
+
   private
 
   def init
     @data_by_year = {}
-    self.social_security_wage_limit_growth_rate ||= RandomVariable.new
-    self.state_disability_wage_limit_growth_rate ||= RandomVariable.new
   end
 
   def growing_value(year, field)

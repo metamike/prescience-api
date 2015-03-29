@@ -7,6 +7,43 @@ describe Scenario, :type => :model do
     it { should validate_uniqueness_of(:name) }
     it { should validate_presence_of(:projections_start) }
     it { should validate_presence_of(:starting_month) }
+
+    let(:scenario) { build(:scenario) }
+    let(:traditional_401k) { mock_model(Traditional401k) }
+    let(:roth_401k) { mock_model(Roth401k) }
+    let(:owner) { instance_double(Owner) }
+
+    before :each do
+      [traditional_401k, roth_401k].each do |account|
+        allow(account).to receive(:owner).and_return(owner)
+        allow(account).to receive(:active?).and_return(true)
+      end
+    end
+
+    context 'when there are no active 401ks' do
+      it 'should be valid' do
+        expect(scenario.valid?).to be(true)
+      end
+    end
+
+    context 'when there is one of each active account by owner' do
+      it 'should be valid' do
+        scenario.traditional401ks << traditional_401k
+        scenario.roth401ks << roth_401k
+        expect(scenario.valid?).to be(true)
+      end
+    end
+
+    context 'when there is more than one type of 401k' do
+      it 'should not be valid with more than one traditional 401k' do
+        scenario.traditional401ks += [traditional_401k, traditional_401k]
+        expect(scenario.valid?).to be(false)
+      end
+      it 'should not be valid with more than one roth 401k' do
+        scenario.roth401ks += [roth_401k, roth_401k]
+        expect(scenario.valid?).to be(false)
+      end
+    end
   end
 
   let(:scenario) { build(:scenario) }
@@ -61,6 +98,47 @@ describe Scenario, :type => :model do
       end
     end
 
+  end
+
+  describe '#active_401ks_by_owner' do
+
+    let(:owner) { instance_double(Owner) }
+    let(:owner2) { instance_double(Owner) }
+
+    context 'with no active accounts' do
+      it 'should be empty' do
+        expect(scenario.active_401ks_by_owner(owner)).to be_empty
+      end
+    end
+
+    context 'with multiple accounts' do
+      [:acct1, :acct2, :acct3].each do |account|
+        let(account) { mock_model(Traditional401k) }
+      end
+      [:acctx, :accty, :acctz].each do |account|
+        let(account) { mock_model(Roth401k) }
+      end
+      it 'should only return active accounts by owner' do
+        [acct1, acct2, acctx, accty].each do |account|
+          allow(account).to receive(:owner).and_return(owner)
+        end
+        [acct3, acctz].each do |account|
+          allow(account).to receive(:owner).and_return(owner2)
+        end
+        [acct2, acct3, accty, acctz].each do |account|
+          allow(account).to receive(:active?).and_return(true)
+        end
+        [acct1, acctx].each do |account|
+          allow(account).to receive(:active?).and_return(false)
+        end
+        scenario.traditional401ks += [acct1, acct2, acct3]
+        scenario.roth401ks += [acctx, accty, acctz]
+        accounts = scenario.active_401ks_by_owner(owner)
+        expect(accounts.length).to eq(2)
+        expect(accounts).to include(acct2)
+        expect(accounts).to include(accty)
+      end
+    end
   end
 
 end

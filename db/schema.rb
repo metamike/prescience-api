@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150325000058) do
+ActiveRecord::Schema.define(version: 20150328013623) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -108,6 +108,7 @@ ActiveRecord::Schema.define(version: 20150325000058) do
     t.datetime "updated_at",              null: false
     t.string   "type"
     t.integer  "owner_id"
+    t.boolean  "active"
   end
 
   add_index "investment_accounts", ["scenario_id"], name: "index_investment_accounts_on_scenario_id", using: :btree
@@ -174,13 +175,15 @@ ActiveRecord::Schema.define(version: 20150325000058) do
 
   create_table "tax_infos", force: :cascade do |t|
     t.integer  "starting_year"
-    t.decimal  "social_security_wage_limit",              precision: 9, scale: 2
+    t.decimal  "social_security_wage_limit",                 precision: 9, scale: 2
     t.string   "social_security_wage_limit_growth_rate"
-    t.decimal  "state_disability_wage_limit",             precision: 9, scale: 2
+    t.decimal  "state_disability_wage_limit",                precision: 9, scale: 2
     t.string   "state_disability_wage_limit_growth_rate"
     t.integer  "scenario_id"
-    t.datetime "created_at",                                                      null: false
-    t.datetime "updated_at",                                                      null: false
+    t.datetime "created_at",                                                         null: false
+    t.datetime "updated_at",                                                         null: false
+    t.integer  "annual_401k_contribution_limit"
+    t.string   "annual_401k_contribution_limit_growth_rate"
   end
 
   add_index "tax_infos", ["scenario_id"], name: "index_tax_infos_on_scenario_id", using: :btree

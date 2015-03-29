@@ -13,6 +13,8 @@ class InvestmentAccount < ActiveRecord::Base
   validates :starting_month, presence: true
   validates :monthly_interest_rate, presence: true
 
+  validates :active, presence: true
+
   after_initialize :reset
 
   def project(month)

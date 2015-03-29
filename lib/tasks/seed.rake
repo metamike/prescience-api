@@ -10,6 +10,22 @@ unless scenario
   )
 end
 
+# Tax Info
+tax_info = TaxInfo.first
+unless tax_info
+  tax_info = TaxInfo.create!(
+    social_security_wage_limit: BigDecimal.new('118500'),
+    social_security_wage_limit_growth_rate: RandomVariable.new(0.022, 0.015),
+    state_disability_wage_limit: BigDecimal.new('104378'),
+    state_disability_wage_limit_growth_rate: RandomVariable.new(0.019, 0.1),
+    annual_401k_contribution_limit: BigDecimal.new('18000'),
+    annual_401k_contribution_limit_growth_rate: RandomVariable.new(0.03, 0.01)
+    # annual IRA contribition: 5500  (0.027, 0.01)
+  )
+  scenario.tax_info = tax_info
+  scenario.save!
+end
+
 # Owners
 mike = Owner.find_by_name('Mike') || Owner.create!(name: 'Mike')
 robin = Owner.find_by_name('Robin') || Owner.create!(name: 'Robin')

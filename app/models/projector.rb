@@ -1,4 +1,25 @@
+#
+# === Lifecycle ===
+#
+# if current funds < greater of necessary minimum (30K?) or upcoming expenses
+#    if investments contains deficit
+#       sell enough stock to meet deficit
+#    else
+#       INSUFFICIENT FUNDS (draw from IRA/401(k)?)
+# else
+#    actual surplus = max(necessary minimum, surplus)
+#    apply surplus towards IRAs (prob. not roth) (always split funds amongst owners)
+#       (amount = remaining amount / months remaining)
+#    if remaining surplus
+#       apply surplus towards 401(k) (split funds equally amongst owners)
+#          (amount = remaining amount / months remaining)
+#       if remaining surplus
+#          apply surplus to investments
+#
 class Projector
+
+  MINIMUM_SAVINGS = BigDecimal.new('30000')
+  INFLATION = 0.03
 
   def initialize(scenario)
     @scenario = scenario
@@ -44,24 +65,46 @@ class Projector
   end
 
   def buy_or_sell_stock(month)
-    expenses = upcoming_expenses(month)
-    liquid_funds = @scenario.savings_accounts.reduce(0) { |a, e| a + e.start_balance(month) }
-    surplus_funds = liquid_funds - expenses
+    funds_needed = [minimum_savings_needed(month), upcoming_expenses(month)].max
+    if current_savings(month) < funds_needed
+      sell_mutual_funds(month, funds_needed - current_savings(month))
+    else
+      surplus_funds = current_savings(month) - funds_needed
+      surplus_funds = contribute_to_401ks(month, surplus_funds)
+      if surplus_funds > 0
+        buy_mutual_funds(month, surplus_funds)
+      end
+    end
+  end
 
-    if surplus_funds < 0
-      # sell stock
-      raise "Need to sell stock to raise #{-surplus_funds}, but there is only #{mutual_fund_balance(month)} available" if mutual_fund_balance(month) < -surplus_funds
-      @scenario.mutual_funds.first.sell(month, -surplus_funds)
-      @scenario.savings_accounts_by_interest_rate.first.credit(month, -surplus_funds)
-    elsif surplus_funds >= 30000
-      # buy stock
-      # TODO hacky: Always keep 30K, no matter what
-      surplus_funds -= 30000
-      @scenario.mutual_funds.first.buy(month, surplus_funds) unless @scenario.mutual_funds.empty?
-      current = surplus_funds
-      # TODO this is hacky (do this in the mutual fund class itself)
-      @scenario.savings_accounts_by_interest_rate.reverse.each do |account|
-        to_debit = [account.start_balance(month), current].min
+  def minimum_savings_needed(month)
+    MINIMUM_SAVINGS * (1 + INFLATION) ** (month.year_diff(@scenario.projections_start))
+  end
+
+  def current_savings(month)
+    @scenario.savings_accounts.reduce(0) { |a, e| a + e.running_balance(month) }
+  end
+
+  def sell_mutual_funds(month, amount)
+    raise "Need to sell stock to raise #{amount}, but there is only #{mutual_fund_balance(month)} available" if mutual_fund_balance(month) < amount
+    current = amount
+    @scenario.mutual_funds.each do |fund|
+      to_sell = [current, fund.starting_balance(month)].min
+      fund.sell(month, to_sell) if to_sell > 0
+      current -= to_sell
+      break if current <= 0
+    end
+    @scenario.savings_accounts_by_interest_rate.first.credit(month, amount)
+  end
+
+  def buy_mutual_funds(month, amount)
+    return if @scenario.mutual_funds.empty?
+    amount_per_fund = (amount / @scenario.mutual_funds.length).round(2)
+    @scenario.mutual_funds.each do |fund|
+      fund.buy(month, amount_per_fund)
+      current = amount_per_fund
+      @scenario.savings_accounts_by_interest_rate.each do |account|
+        to_debit = [account.running_balance(month), current].min
         account.debit(month, to_debit)
         current -= to_debit
         break if current <= 0
@@ -86,6 +129,29 @@ class Projector
 
   def mutual_fund_balance(month)
     @scenario.mutual_funds.reduce(0) { |a, e| a + e.starting_balance(month) }
+  end
+
+  def contribute_to_401ks(month, amount)
+    amount_available_per_owner = amount / @scenario.income_accounts.length
+    contribution_limit = @scenario.tax_info.annual_401k_contribution_limit_for_year(month.year)
+    months_remaining = 12 - month.month + 1
+    contributed = 0
+    @scenario.income_accounts.each do |income_account|
+      accounts = @scenario.active_401ks_by_owner(income_account.owner)
+      next if accounts.empty?
+      ytd_contributions = income_account.ytd_401k_contributions(month)
+      allowable_contributions = contribution_limit - ytd_contributions
+      next if allowable_contributions <= 0
+      max_monthly_contribution = allowable_contributions / months_remaining
+      to_contribute = ([max_monthly_contribution, amount_available_per_owner].min / accounts.length).round(2)
+      accounts.each do |_401k|
+        _401k.buy(month, to_contribute)
+        income_account.record_pretax_401k_contribution(month, to_contribute) if _401k.is_a? Roth401k
+        income_account.record_aftertax_401k_contribution(month, to_contribute) if _401k.is_a? Traditional401k
+      end
+      contributed += to_contribute * accounts.length
+    end
+    amount - contributed
   end
 
   def generate_report(month)

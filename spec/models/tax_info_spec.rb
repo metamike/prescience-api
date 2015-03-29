@@ -2,12 +2,11 @@ require 'rails_helper'
 
 describe TaxInfo, type: :model do
   context 'validations' do
-    it { should validate_presence_of(:starting_year) }
-    it { should validate_numericality_of(:starting_year) }
-    it { should validate_presence_of(:social_security_wage_limit) }
-    it { should validate_numericality_of(:social_security_wage_limit) }
-    it { should validate_presence_of(:state_disability_wage_limit) }
-    it { should validate_numericality_of(:state_disability_wage_limit) }
+    [:starting_year, :social_security_wage_limit, :state_disability_wage_limit,
+        :annual_401k_contribution_limit].each do |field|
+      it { should validate_presence_of(field) }
+      it { should validate_numericality_of(field) }
+    end
   end
 
   let(:tax_info) { build(:tax_info) }
