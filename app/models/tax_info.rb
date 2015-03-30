@@ -24,6 +24,10 @@ class TaxInfo < ActiveRecord::Base
     growing_value(year, :annual_401k_contribution_limit)
   end
 
+  def standard_deduction(year, filing_status)
+    raise NotImplementedError
+  end
+
   private
 
   def init

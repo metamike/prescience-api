@@ -12,7 +12,7 @@ TaxFormBuilder.constructify do
     cell  '8b', 0
     cell  '9a', proc { taxable_dividends }
     cell  '9b', proc { qualified_dividends }
-    cell '10',  proc { state_income_tax_refund }
+    cell '10',  proc { state_income_tax_refund_worksheet.c7 }
     cell '11',  0
     cell '12',  0
     cell '13',  proc { f1040d.capital_net }
@@ -66,7 +66,18 @@ TaxFormBuilder.constructify do
   # == WORKSHEETS ==
   #
 
-  # Standard Deducsion
+  # State Income Tax Refund
+  form :state_income_tax_refund_worksheet do
+    cell '1', proc { [state_income_tax_refund, prior_year_state_income_taxes].min }
+    cell '2', proc { prior_year_itemized_deductions }
+    cell '3', proc { tax_info.standard_deduction(tax_year - 1, filing_status) }
+    cell '4', 0
+    cell '5', proc { c3 + c4 }
+    cell '6', proc { c5 < c2 ? c2 - c5 : :stop }
+    cell '7', proc { c6 == :stop ? 0 : [c1, c6].min }
+  end
+
+  # Standard Deduction
   form :standard_deduction_worksheet do
     cell '1',  proc {
       earned_income = f1040.c7 + f1040.c12 + f1040.c18 - f1040.c27

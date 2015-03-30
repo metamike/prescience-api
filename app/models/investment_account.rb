@@ -50,12 +50,8 @@ class InvestmentAccount < ActiveRecord::Base
     @cohorts.sold(month)
   end
 
-  def taxable_performance(month)
-    @cohorts.taxable_performance(month)
-  end
-
-  def qualified_performance(month)
-    @cohorts.qualified_performance(month)
+  def performance(month)
+    @cohorts.performance(month)
   end
 
   def taxable_dividends(month)
@@ -105,7 +101,7 @@ class InvestmentAccount < ActiveRecord::Base
         'starting balance' => starting_balance(month),
         'bought' => bought(month),   # NOTE includes dividends!
         'sold' => sold(month),
-        'performance' => taxable_performance(month) + qualified_performance(month),
+        'performance' => performance(month),
         'dividends' => taxable_dividends(month) + qualified_dividends(month),
         'ending balance' => ending_balance(month)
       }

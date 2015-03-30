@@ -18,6 +18,7 @@
 - 401k contributions
 - commuter benefits
 TODO Annual Income Taxes
+TODO share a global interest rate
 TODO 401(k) rollovers
 TODO One-Time Expenses
 TODO Travel

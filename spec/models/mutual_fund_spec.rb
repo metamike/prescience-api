@@ -14,8 +14,7 @@ describe MutualFund, :type => :model do
       let(:account) { build(:mutual_fund) }
       it 'should return 0' do
         account.project(account.starting_month)
-        expect(account.taxable_performance(account.starting_month)).to eq(0)
-        expect(account.qualified_performance(account.starting_month)).to eq(0)
+        expect(account.performance(account.starting_month)).to eq(0)
         expect(account.taxable_dividends(account.starting_month)).to eq(0)
         expect(account.qualified_dividends(account.starting_month)).to eq(0)
         expect(account.ending_balance(account.starting_month)).to eq(0)
@@ -31,8 +30,7 @@ describe MutualFund, :type => :model do
           account.stock_bundles << bundle
           account.project(account.starting_month)
           activity = bundle.stock_activities.sort_by(&:month).first
-          expect(account.taxable_performance(account.starting_month)).to eq(activity.performance)
-          expect(account.qualified_performance(account.starting_month)).to eq(0)
+          expect(account.performance(account.starting_month)).to eq(activity.performance)
           expect(account.taxable_dividends(account.starting_month)).to eq(activity.dividends)
           expect(account.qualified_dividends(account.starting_month)).to eq(0)
           expect(account.ending_balance(account.starting_month)).to eq(bundle.amount + activity.performance + activity.dividends)
@@ -47,8 +45,7 @@ describe MutualFund, :type => :model do
           account.starting_month.upto(last_activity.month) do |month|
             account.project(month)
           end
-          expect(account.taxable_performance(last_activity.month)).to eq(0)
-          expect(account.qualified_performance(last_activity.month)).to eq(last_activity.performance)
+          expect(account.performance(last_activity.month)).to eq(last_activity.performance)
           expect(account.taxable_dividends(last_activity.month)).to eq(0)
           expect(account.qualified_dividends(last_activity.month)).to eq(last_activity.dividends)
         end
@@ -66,8 +63,7 @@ describe MutualFund, :type => :model do
         account.project(account.starting_month)
         performance1 = bundle1.stock_activities.sort_by(&:month).first.performance
         dividends1 = bundle1.stock_activities.sort_by(&:month).first.dividends
-        expect(account.taxable_performance(account.starting_month)).to eq(performance1)
-        expect(account.qualified_performance(account.starting_month)).to eq(0)
+        expect(account.performance(account.starting_month)).to eq(performance1)
         expect(account.taxable_dividends(account.starting_month)).to eq(dividends1)
         expect(account.qualified_dividends(account.starting_month)).to eq(0)
         expect(account.ending_balance(account.starting_month)).to eq(bundle1.amount + performance1 + dividends1)
@@ -77,8 +73,7 @@ describe MutualFund, :type => :model do
         performance2 = [bundle1, bundle2].reduce(0) { |a, e| a += e.stock_activities.find { |s| s.month == month }.performance }
         dividends2 = [bundle1, bundle2].reduce(0) { |a, e| a += e.stock_activities.find { |s| s.month == month }.dividends }
         bundle1div2 = bundle1.stock_activities.sort_by(&:month).last.dividends
-        expect(account.taxable_performance(month)).to eq(performance2)
-        expect(account.qualified_performance(month)).to eq(0)
+        expect(account.performance(month)).to eq(performance2)
         expect(account.taxable_dividends(month)).to eq(dividends2)
         expect(account.qualified_dividends(month)).to eq(0)
         expect(account.ending_balance(month)).to eq(bundle1.amount + bundle2.amount + performance1 + dividends1 + performance2 + dividends2 - bundle1div2)
@@ -93,8 +88,7 @@ describe MutualFund, :type => :model do
         account.project(account.starting_month)
         performance = bundle.stock_activities.sort_by(&:month).first.performance
         dividends = bundle.stock_activities.sort_by(&:month).first.dividends
-        expect(account.taxable_performance(account.starting_month)).to eq(performance)
-        expect(account.qualified_performance(account.starting_month)).to eq(0)
+        expect(account.performance(account.starting_month)).to eq(performance)
         expect(account.taxable_dividends(account.starting_month)).to eq(dividends)
         expect(account.qualified_dividends(account.starting_month)).to eq(0)
         expect(account.ending_balance(account.starting_month)).to eq(bundle.amount + performance + dividends - bundle.stock_activities.first.sold)
@@ -189,7 +183,7 @@ describe MutualFund, :type => :model do
         'starting balance' => account.starting_balance(account.starting_month),
         'bought' => account.bought(account.starting_month),
         'sold' => account.sold(account.starting_month),
-        'performance' => account.taxable_performance(account.starting_month) + account.qualified_performance(account.starting_month),
+        'performance' => account.performance(account.starting_month),
         'dividends' => account.taxable_dividends(account.starting_month) + account.qualified_dividends(account.starting_month),
         'ending balance' => account.ending_balance(account.starting_month)
       }}

@@ -40,13 +40,31 @@ class TaxFormSet
 
   def taxable_dividends
     reduce_tax_year do |dividends, month|
-      dividends + @scenario.mutual_funds.where(owner_id, @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
+      dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
     end
   end
 
   def qualified_dividends
     reduce_tax_year do |dividends, month|
-      dividends + @scenario.mutual_funds.where(owner_id, @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+      dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+    end
+  end
+
+  def state_income_tax_refund
+    raise NotImplementedError
+  end
+
+  def prior_year_state_income_taxes
+    raise NotImplementedError
+  end
+
+  def prior_year_itemized_deductions
+    raise NotImplementedError
+  end
+
+  def short_term_proceeds
+    reduce_tax_year do |proceeds, month|
+      month + @scenario.mutial_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.sold }
     end
   end
 
