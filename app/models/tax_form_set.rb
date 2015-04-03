@@ -1,5 +1,6 @@
 class TaxFormSet
 
+  # TODO underscore after 'f'
   FORM_REGEX = /^f[\d\w]+$/
 
   attr_reader :forms
@@ -8,11 +9,9 @@ class TaxFormSet
     @forms = {}
   end
 
-  def run(scenario, owner, tax_year)
-    @scenario = scenario
-    @owner = owner
-    @tax_year = tax_year
-    self
+  def run(account, year)
+    @account = account
+    @tax_year = year
   end
 
   def form(name, &block)
@@ -21,32 +20,52 @@ class TaxFormSet
     @forms[name.to_s] = form
   end
 
-  def filing_status
-    # TODO support filing statuses
-    'single'
+  def filing_status(year)
+    if income_tax_activities.find { |a| a.year == year }
+      income_tax_activities.find { |a| a.year == year }.filing_status
+    else
+      # TODO support filing statuses
+      'single'
+    end
   end
 
   def wages
-    reduce_tax_year do |wages, month|
-      wages + @scenario.income_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.gross(month) }
+    if income_tax_activities.find { |a| a.year == year }
+      income_tax_activities.find { |a| a.year == year }.wages
+    else
+      reduce_tax_year do |wages, month|
+        wages + @scenario.income_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.gross(month) }
+      end
     end
   end
 
   def taxable_interest
-    reduce_tax_year do |interest, month|
-      interest + @scenario.savings_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.interest(month) }
+    if income_tax_activities.find { |a| a.year == year }
+      income_tax_activities.find { |a| a.year == year }.taxable_interest
+    else
+      reduce_tax_year do |interest, month|
+        interest + @scenario.savings_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.interest(month) }
+      end
     end
   end
 
   def taxable_dividends
-    reduce_tax_year do |dividends, month|
-      dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
+    if income_tax_activities.find { |a| a.year == year }
+      income_tax_activities.find { |a| a.year == year }.taxable_dividends
+    else
+      reduce_tax_year do |dividends, month|
+        dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
+      end
     end
   end
 
   def qualified_dividends
-    reduce_tax_year do |dividends, month|
-      dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+    if income_tax_activities.find { |a| a.year == year }
+      income_tax_activities.find { |a| a.year == year }.qualified_dividends
+    else
+      reduce_tax_year do |dividends, month|
+        dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+      end
     end
   end
 
@@ -60,12 +79,6 @@ class TaxFormSet
 
   def prior_year_itemized_deductions
     raise NotImplementedError
-  end
-
-  def short_term_proceeds
-    reduce_tax_year do |proceeds, month|
-      month + @scenario.mutial_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.sold }
-    end
   end
 
   private

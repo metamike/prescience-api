@@ -11,6 +11,7 @@ class Scenario < ActiveRecord::Base
   has_many :traditional401ks
   has_many :roth401ks
   has_many :home_equity_accounts
+  has_many :income_tax_accounts
 
   serialize :starting_month,    Month
   serialize :projections_start, Month

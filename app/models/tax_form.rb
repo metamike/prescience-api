@@ -17,8 +17,12 @@ class TaxForm
   private
 
   def method_missing(method, *args)
-    value = cell_value(method.to_s)
-    return @form_set.send(method) unless value   # try parent
+    formulate_cell(method)
+  end
+
+  def formulate_cell(ref)
+    value = cell_value(ref.to_s)
+    return @form_set.send(ref) unless value   # try parent
 
     if value.respond_to?(:call)
       self.instance_eval &value

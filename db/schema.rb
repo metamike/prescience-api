@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150328013623) do
+ActiveRecord::Schema.define(version: 20150331021012) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -97,6 +97,37 @@ ActiveRecord::Schema.define(version: 20150328013623) do
   end
 
   add_index "income_accounts", ["owner_id"], name: "index_income_accounts_on_owner_id", using: :btree
+
+  create_table "income_tax_accounts", force: :cascade do |t|
+    t.integer "scenario_id"
+    t.integer "owner_id"
+    t.string  "filing_status"
+  end
+
+  add_index "income_tax_accounts", ["owner_id"], name: "index_income_tax_accounts_on_owner_id", using: :btree
+  add_index "income_tax_accounts", ["scenario_id"], name: "index_income_tax_accounts_on_scenario_id", using: :btree
+
+  create_table "income_tax_activities", force: :cascade do |t|
+    t.integer  "year"
+    t.integer  "income_tax_account_id"
+    t.string   "filing_status"
+    t.decimal  "wages",                     precision: 9,  scale: 2
+    t.decimal  "taxable_interest",          precision: 7,  scale: 2
+    t.decimal  "taxable_dividends",         precision: 7,  scale: 2
+    t.decimal  "qualified_dividends",       precision: 7,  scale: 2
+    t.decimal  "short_term_capital_net",    precision: 9,  scale: 2
+    t.decimal  "long_term_capital_net",     precision: 9,  scale: 2
+    t.decimal  "adjusted_gross_income",     precision: 10, scale: 2
+    t.decimal  "taxable_income",            precision: 10, scale: 2
+    t.decimal  "federal_income_tax",        precision: 9,  scale: 2
+    t.decimal  "federal_income_tax_refund", precision: 9,  scale: 2
+    t.decimal  "state_income_tax",          precision: 9,  scale: 2
+    t.decimal  "state_income_tax_refund",   precision: 9,  scale: 2
+    t.datetime "created_at",                                         null: false
+    t.datetime "updated_at",                                         null: false
+  end
+
+  add_index "income_tax_activities", ["income_tax_account_id"], name: "index_income_tax_activities_on_income_tax_account_id", using: :btree
 
   create_table "investment_accounts", force: :cascade do |t|
     t.integer  "scenario_id"
