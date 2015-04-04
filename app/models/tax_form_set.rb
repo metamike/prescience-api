@@ -20,65 +20,92 @@ class TaxFormSet
     @forms[name.to_s] = form
   end
 
-  def filing_status(year)
-    if income_tax_activities.find { |a| a.year == year }
-      income_tax_activities.find { |a| a.year == year }.filing_status
+  def filing_status
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.filing_status
     else
-      # TODO support filing statuses
-      'single'
+      @account.filing_status
     end
   end
 
   def wages
-    if income_tax_activities.find { |a| a.year == year }
-      income_tax_activities.find { |a| a.year == year }.wages
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.wages
     else
       reduce_tax_year do |wages, month|
-        wages + @scenario.income_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.gross(month) }
+        if @account.owner
+          wages + @account.scenario.income_accounts.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.gross(month) }
+        else
+          wages + @account.scenario.income_accounts.reduce(0) { |a, e| a + e.gross(month) }
+        end
       end
     end
   end
 
   def taxable_interest
-    if income_tax_activities.find { |a| a.year == year }
-      income_tax_activities.find { |a| a.year == year }.taxable_interest
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.taxable_interest
     else
       reduce_tax_year do |interest, month|
-        interest + @scenario.savings_accounts.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.interest(month) }
+        if @account.owner
+          interest + @account.scenario.savings_accounts.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.interest(month) }
+        else
+          interest + @account.scenario.income_accounts.reduce(0) { |a, e| a + e.interest(month) }
+        end
       end
     end
   end
 
   def taxable_dividends
-    if income_tax_activities.find { |a| a.year == year }
-      income_tax_activities.find { |a| a.year == year }.taxable_dividends
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.taxable_dividends
     else
       reduce_tax_year do |dividends, month|
-        dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.taxable_dividends(month) }
+        if @account.owner
+          dividends + @account.scenario.mutual_funds.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.taxable_dividends(month) }
+        else
+          dividends + @account.scenario.mutual_funds.reduce(0) { |a, e| a + e.taxable_dividends(month) }
+        end
       end
     end
   end
 
   def qualified_dividends
-    if income_tax_activities.find { |a| a.year == year }
-      income_tax_activities.find { |a| a.year == year }.qualified_dividends
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.qualified_dividends
     else
       reduce_tax_year do |dividends, month|
-        dividends + @scenario.mutual_funds.where(owner_id: @owner.id).reduce(0) { |a, e| a + e.qualified_dividends(month) }
+        if @account.owner
+          dividends + @account.scenario.mutual_funds.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.qualified_dividends(month) }
+        else
+          dividends + @account.scenario.mutual_funds.reduce(0) { |a, e| a + e.qualified_dividends(month) }
+        end
       end
     end
   end
 
   def state_income_tax_refund
-    raise NotImplementedError
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      -@account.income_tax_activities.find { |a| a.year == @tax_year }.state_income_tax_owed
+    else
+      -@account.state_income_tax_owed(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+    end
   end
 
   def prior_year_state_income_taxes
-    raise NotImplementedError
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.state_income_tax
+    else
+      @account.state_income_tax(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+    end
   end
 
   def prior_year_itemized_deductions
-    raise NotImplementedError
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.federal_itemized_deductions
+    else
+      @account.federal_itemized_deductions(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+    end
   end
 
   private

@@ -111,20 +111,21 @@ ActiveRecord::Schema.define(version: 20150331021012) do
     t.integer  "year"
     t.integer  "income_tax_account_id"
     t.string   "filing_status"
-    t.decimal  "wages",                     precision: 9,  scale: 2
-    t.decimal  "taxable_interest",          precision: 7,  scale: 2
-    t.decimal  "taxable_dividends",         precision: 7,  scale: 2
-    t.decimal  "qualified_dividends",       precision: 7,  scale: 2
-    t.decimal  "short_term_capital_net",    precision: 9,  scale: 2
-    t.decimal  "long_term_capital_net",     precision: 9,  scale: 2
-    t.decimal  "adjusted_gross_income",     precision: 10, scale: 2
-    t.decimal  "taxable_income",            precision: 10, scale: 2
-    t.decimal  "federal_income_tax",        precision: 9,  scale: 2
-    t.decimal  "federal_income_tax_refund", precision: 9,  scale: 2
-    t.decimal  "state_income_tax",          precision: 9,  scale: 2
-    t.decimal  "state_income_tax_refund",   precision: 9,  scale: 2
-    t.datetime "created_at",                                         null: false
-    t.datetime "updated_at",                                         null: false
+    t.decimal  "wages",                       precision: 9,  scale: 2
+    t.decimal  "taxable_interest",            precision: 7,  scale: 2
+    t.decimal  "taxable_dividends",           precision: 7,  scale: 2
+    t.decimal  "qualified_dividends",         precision: 7,  scale: 2
+    t.decimal  "short_term_capital_net",      precision: 9,  scale: 2
+    t.decimal  "long_term_capital_net",       precision: 9,  scale: 2
+    t.decimal  "adjusted_gross_income",       precision: 10, scale: 2
+    t.decimal  "taxable_income",              precision: 10, scale: 2
+    t.decimal  "federal_itemized_deductions", precision: 9,  scale: 2
+    t.decimal  "federal_income_tax",          precision: 9,  scale: 2
+    t.decimal  "federal_income_tax_owed",     precision: 9,  scale: 2
+    t.decimal  "state_income_tax",            precision: 9,  scale: 2
+    t.decimal  "state_income_tax_owed",       precision: 9,  scale: 2
+    t.datetime "created_at",                                           null: false
+    t.datetime "updated_at",                                           null: false
   end
 
   add_index "income_tax_activities", ["income_tax_account_id"], name: "index_income_tax_activities_on_income_tax_account_id", using: :btree

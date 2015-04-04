@@ -16,9 +16,10 @@ class IncomeTaxActivity < ActiveRecord::Base
   # Outputs
   validates :adjusted_gross_income, presence: true, numericality: true
   validates :taxable_income, presence: true, numericality: true
+  validates :federal_itemized_deductions, presence: true, numericality: true
   validates :federal_income_tax, presence: true, numericality: true
-  validates :federal_income_tax_refund, presence: true, numericality: true
+  validates :federal_income_tax_owed, presence: true, numericality: true
   validates :state_income_tax, presence: true, numericality: true
-  validates :state_income_tax_refund, presence: true, numericality: true
+  validates :state_income_tax_owed, presence: true, numericality: true
 
 end

@@ -17,10 +17,11 @@ class CreateIncomeTaxActivities < ActiveRecord::Migration
       # Outputs
       t.decimal :adjusted_gross_income, precision: 10, scale: 2
       t.decimal :taxable_income, precision: 10, scale: 2
+      t.decimal :federal_itemized_deductions, precision: 9, scale: 2
       t.decimal :federal_income_tax, precision: 9, scale: 2
-      t.decimal :federal_income_tax_refund, precision: 9, scale: 2
+      t.decimal :federal_income_tax_owed, precision: 9, scale: 2
       t.decimal :state_income_tax, precision: 9, scale: 2
-      t.decimal :state_income_tax_refund, precision: 9, scale: 2
+      t.decimal :state_income_tax_owed, precision: 9, scale: 2
 
       t.timestamps null: false
     end
