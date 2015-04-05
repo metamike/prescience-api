@@ -14,6 +14,7 @@ class IncomeTaxActivity < ActiveRecord::Base
   validates :long_term_capital_net, numericality: true, allow_nil: true
 
   # Outputs
+  validates :capital_net, presence: true, numericality: true
   validates :adjusted_gross_income, presence: true, numericality: true
   validates :taxable_income, presence: true, numericality: true
   validates :federal_itemized_deductions, presence: true, numericality: true

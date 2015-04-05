@@ -6,8 +6,11 @@ describe IncomeTaxAccount, type: :model do
   let(:form_set) { double(TaxFormSet) }
   let(:f1040) { double(TaxForm) }
   let(:itemized) { BigDecimal.new('9000') }
+  let(:agi) { BigDecimal.new('50000') }
   let(:federal_tax) { BigDecimal.new('12000') }
   let(:federal_owed) { BigDecimal.new('-4000') }
+  let(:f1040d) { double(TaxForm) }
+  let(:capital_net) { BigDecimal.new('500') }
   let(:ca540) { double(TaxForm) }
   let(:state_tax) { BigDecimal.new('6000') }
   let(:state_owed) { BigDecimal.new('1200') }
@@ -17,8 +20,11 @@ describe IncomeTaxAccount, type: :model do
     allow(form_set).to receive(:run)
     allow(form_set).to receive(:f1040).and_return(f1040)
     allow(f1040).to receive(:itemized_deductions).and_return(itemized)
+    allow(f1040).to receive(:adjusted_gross_income).and_return(agi)
     allow(f1040).to receive(:federal_income_tax).and_return(federal_tax)
     allow(f1040).to receive(:federal_income_tax_owed).and_return(federal_owed)
+    allow(form_set).to receive(:f1040d).and_return(f1040d)
+    allow(f1040d).to receive(:capital_net).and_return(capital_net)
     allow(form_set).to receive(:ca540).and_return(ca540)
     allow(ca540).to receive(:state_income_tax).and_return(state_tax)
     allow(ca540).to receive(:state_income_tax_owed).and_return(state_owed)

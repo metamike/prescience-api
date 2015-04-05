@@ -3,12 +3,16 @@ class TaxInfo < ActiveRecord::Base
   serialize :social_security_wage_limit_growth_rate, RandomVariable
   serialize :state_disability_wage_limit_growth_rate, RandomVariable
   serialize :annual_401k_contribution_limit_growth_rate, RandomVariable
+  serialize :standard_deduction_growth_rate, RandomVariable
 
   validates :starting_year, presence: true, numericality: true
 
   validates :social_security_wage_limit, presence: true, numericality: true
   validates :state_disability_wage_limit, presence: true, numericality: true
   validates :annual_401k_contribution_limit, presence: true, numericality: true
+
+  validates :standard_deduction, presence: true, numericality: true
+  validates :max_capital_loss, presence: true, numericality: true
 
   after_initialize :init
 
@@ -24,8 +28,12 @@ class TaxInfo < ActiveRecord::Base
     growing_value(year, :annual_401k_contribution_limit)
   end
 
-  def standard_deduction(year, filing_status)
-    raise NotImplementedError
+  def standard_deduction_for_year(year, filing_status)
+    growing_value(year, :standard_deduction) * (filing_status == 'single' ? 1 : 2)
+  end
+
+  def max_capital_loss_for_year(year, filing_status)
+    max_capital_loss * (filing_status == 'single' ? 1 : 2)
   end
 
   private

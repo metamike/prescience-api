@@ -74,6 +74,14 @@ class InvestmentAccount < ActiveRecord::Base
     @cohorts.ending_balance(month)
   end
 
+  def short_term_net(year)
+    @cohorts.short_term_net(year)
+  end
+
+  def long_term_net(year)
+    @cohorts.long_term_net(year)
+  end
+
   def interest_rate(month)
     @interest_rates[month] || 0
   end

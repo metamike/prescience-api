@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150331021012) do
+ActiveRecord::Schema.define(version: 20150405212223) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -126,6 +126,7 @@ ActiveRecord::Schema.define(version: 20150331021012) do
     t.decimal  "state_income_tax_owed",       precision: 9,  scale: 2
     t.datetime "created_at",                                           null: false
     t.datetime "updated_at",                                           null: false
+    t.decimal  "capital_net",                 precision: 9,  scale: 2
   end
 
   add_index "income_tax_activities", ["income_tax_account_id"], name: "index_income_tax_activities_on_income_tax_account_id", using: :btree
@@ -216,6 +217,9 @@ ActiveRecord::Schema.define(version: 20150331021012) do
     t.datetime "updated_at",                                                         null: false
     t.integer  "annual_401k_contribution_limit"
     t.string   "annual_401k_contribution_limit_growth_rate"
+    t.decimal  "standard_deduction",                         precision: 8, scale: 2
+    t.string   "standard_deduction_growth_rate"
+    t.decimal  "max_capital_loss",                           precision: 7, scale: 2
   end
 
   add_index "tax_infos", ["scenario_id"], name: "index_tax_infos_on_scenario_id", using: :btree

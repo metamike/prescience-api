@@ -11,6 +11,7 @@ FactoryGirl.define do
     short_term_capital_net { Faker::Number.number(5).to_i / 100.0 }
     long_term_capital_net  { Faker::Number.number(6).to_i / 100.0 }
 
+    capital_net                 { Faker::Number.number(6).to_i / 100.0 }
     adjusted_gross_income       { Faker::Number.number(7).to_i / 100.0 }
     taxable_income              { Faker::Number.number(7).to_i / 100.0 }
     federal_itemized_deductions { Faker::Number.number(6).to_i / 100.0 }

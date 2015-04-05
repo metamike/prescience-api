@@ -3,7 +3,7 @@ class TaxFormSet
   # TODO underscore after 'f'
   FORM_REGEX = /^f[\d\w]+$/
 
-  attr_reader :forms
+  attr_reader :forms, :tax_year
 
   def initialize
     @forms = {}
@@ -88,7 +88,7 @@ class TaxFormSet
     if @account.income_tax_activities.find { |a| a.year == @tax_year }
       -@account.income_tax_activities.find { |a| a.year == @tax_year }.state_income_tax_owed
     else
-      -@account.state_income_tax_owed(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+      -@account.state_income_tax_owed(@tax_year - 1)
     end
   end
 
@@ -96,7 +96,23 @@ class TaxFormSet
     if @account.income_tax_activities.find { |a| a.year == @tax_year }
       @account.income_tax_activities.find { |a| a.year == @tax_year }.state_income_tax
     else
-      @account.state_income_tax(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+      @account.state_income_tax(@tax_year - 1)
+    end
+  end
+
+  def prior_year_capital_net
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.capital_net
+    else
+      @account.capital_net(@tax_year - 1)
+    end
+  end
+
+  def prior_year_adjusted_gross_income
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.adjusted_gross_income
+    else
+      @account.adjusted_gross_income(@tax_year - 1)
     end
   end
 
@@ -104,7 +120,31 @@ class TaxFormSet
     if @account.income_tax_activities.find { |a| a.year == @tax_year }
       @account.income_tax_activities.find { |a| a.year == @tax_year }.federal_itemized_deductions
     else
-      @account.federal_itemized_deductions(Month.new(@tax_year - 1, IncomeTaxAccount::TAX_MONTH))
+      @account.federal_itemized_deductions(@tax_year - 1)
+    end
+  end
+
+  def short_term_capital_net
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.short_term_capital_net
+    else
+      if @account.owner
+        @account.scenario.mutual_funds.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.short_term_net(@tax_year) }
+      else
+        @account.scenario.mutual_funds.reduce(0) { |a, e| a + e.short_term_net(@tax_year) }
+      end
+    end
+  end
+
+  def short_term_capital_net
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.long_term_capital_net
+    else
+      if @account.owner
+        @account.scenario.mutual_funds.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.long_term_net(@tax_year) }
+      else
+        @account.scenario.mutual_funds.reduce(0) { |a, e| a + e.long_term_net(@tax_year) }
+      end
     end
   end
 

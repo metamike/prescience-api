@@ -18,12 +18,15 @@ class IncomeTaxAccount < ActiveRecord::Base
   def project(month)
     return if month.month != TAX_MONTH || @transactions[tax_year(month)]
     TaxFormBuilder.form_set.run(self, tax_year(month))
-    @transactions[tax_year(month)] = {}
-    @transactions[tax_year(month)][:federal_itemized_deductions] = TaxFormBuilder.form_set.f1040.itemized_deductions
-    @transactions[tax_year(month)][:federal_income_tax] = TaxFormBuilder.form_set.f1040.federal_income_tax
-    @transactions[tax_year(month)][:federal_income_tax_owed] = TaxFormBuilder.form_set.f1040.federal_income_tax_owed
-    @transactions[tax_year(month)][:state_income_tax] = TaxFormBuilder.form_set.ca540.state_income_tax
-    @transactions[tax_year(month)][:state_income_tax_owed] = TaxFormBuilder.form_set.ca540.state_income_tax_owed
+    @transactions[tax_year(month)] = {
+      capital_net: TaxFormBuilder.form_set.f1040d.capital_net,
+      adjusted_gross_income: TaxFormBuilder.form_set.f1040.adjusted_gross_income,
+      federal_itemized_deductions: TaxFormBuilder.form_set.f1040.itemized_deductions,
+      federal_income_tax: TaxFormBuilder.form_set.f1040.federal_income_tax,
+      federal_income_tax_owed: TaxFormBuilder.form_set.f1040.federal_income_tax_owed,
+      state_income_tax: TaxFormBuilder.form_set.ca540.state_income_tax,
+      state_income_tax_owed: TaxFormBuilder.form_set.ca540.state_income_tax_owed
+    }
   end
 
   def transact(month)
@@ -31,6 +34,14 @@ class IncomeTaxAccount < ActiveRecord::Base
     raise "No projection for #{month}. Please run #project first" unless @transactions[tax_year(month)]
     expense(month, @transactions[tax_year(month)][:federal_income_tax_owed] +
                    @transactions[tax_year(month)][:state_income_tax_owed])
+  end
+
+  def capital_net(tax_year)
+    @transactions[tax_year] ? @transactions[tax_year][:capital_net] : 0
+  end
+
+  def adjusted_gross_income(tax_year)
+    @transactions[tax_year] ? @transactions[tax_year][:adjusted_gross_income] : 0
   end
 
   def federal_itemized_deductions(tax_year)
@@ -86,12 +97,15 @@ class IncomeTaxAccount < ActiveRecord::Base
   end
 
   def build_transaction_from_activity(activity)
-    @transactions[activity.year] = {}
-    @transactions[activity.year][:federal_itemized_deductions] = activity.federal_itemized_deductions
-    @transactions[activity.year][:federal_income_tax] = activity.federal_income_tax
-    @transactions[activity.year][:federal_income_tax_owed] = activity.federal_income_tax_owed
-    @transactions[activity.year][:state_income_tax] = activity.state_income_tax
-    @transactions[activity.year][:state_income_tax_owed] = activity.state_income_tax_owed
+    @transactions[activity.year] = {
+      capital_net: activity.capital_net,
+      adjusted_gross_income: activity.adjusted_gross_income,
+      federal_itemized_deductions: activity.federal_itemized_deductions,
+      federal_income_tax: activity.federal_income_tax,
+      federal_income_tax_owed: activity.federal_income_tax_owed,
+      state_income_tax: activity.state_income_tax,
+      state_income_tax_owed: activity.state_income_tax_owed
+    }
   end
 
   def tax_year(month)
