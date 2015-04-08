@@ -14,21 +14,93 @@ end
 tax_info = TaxInfo.first
 unless tax_info
   tax_info = TaxInfo.create!(
-    social_security_wage_limit: BigDecimal.new('118500'),
     social_security_wage_limit_growth_rate: RandomVariable.new(0.022, 0.015),
-    state_disability_wage_limit: BigDecimal.new('104378'),
     state_disability_wage_limit_growth_rate: RandomVariable.new(0.019, 0.1),
-    annual_401k_contribution_limit: BigDecimal.new('18000'),
-    annual_401k_contribution_limit_growth_rate: RandomVariable.new(0.03, 0.01)
-    # annual IRA contribition: 5500  (0.027, 0.01)
+    annual_401k_contribution_limit_growth_rate: RandomVariable.new(0.03, 0.01),
+    standard_deduction_growth_rate: RandomVariable.new(0.022, 0.005),
+    max_capital_loss_growth_rate: RandomVariable.new(0, 0),
+    personal_exemption_income_limit_growth_rate: RandomVariable.new(0.02, 0.001),
+    personal_exemption_growth_rate: RandomVariable.new(0.02, 0.005)
   )
   scenario.tax_info = tax_info
   scenario.save!
+end
+unless HistoricalTaxInfo.find_by_year(2013)
+  historical = HistoricalTaxInfo.create!(
+    year: 2013,
+    social_security_wage_limit: BigDecimal.new('113700'),
+    state_disability_wage_limit: BigDecimal.new('100880'),
+    annual_401k_contribution_limit: BigDecimal.new('17000'),
+    standard_deduction: BigDecimal.new('6100'),
+    max_capital_loss: BigDecimal.new('3000'),
+    personal_exemption_income_limit_single: BigDecimal.new('250000'),
+    personal_exemption_income_limit_married: BigDecimal.new('300000'),
+    personal_exemption: BigDecimal.new('3900')
+  )
+  tax_info.historical_tax_infos << historical
+  tax_info.save!
+end
+unless HistoricalTaxInfo.find_by_year(2014)
+  historical = HistoricalTaxInfo.create!(
+    year: 2014,
+    social_security_wage_limit: BigDecimal.new('117000'),
+    state_disability_wage_limit: BigDecimal.new('101636'),
+    annual_401k_contribution_limit: BigDecimal.new('17500'),
+    standard_deduction: BigDecimal.new('6200'),
+    max_capital_loss: BigDecimal.new('3000'),
+    personal_exemption_income_limit_single: BigDecimal.new('254200'),
+    personal_exemption_income_limit_married: BigDecimal.new('305050'),
+    personal_exemption: BigDecimal.new('3950')
+  )
+  tax_info.historical_tax_infos << historical
+  tax_info.save!
+end
+unless HistoricalTaxInfo.find_by_year(2015)
+  historical = HistoricalTaxInfo.create!(
+    year: 2015,
+    social_security_wage_limit: BigDecimal.new('118500'),
+    state_disability_wage_limit: BigDecimal.new('104378'),
+    annual_401k_contribution_limit: BigDecimal.new('18000'),
+    standard_deduction: BigDecimal.new('6300'),
+    max_capital_loss: BigDecimal.new('3000')
+  )
+  tax_info.historical_tax_infos << historical
+  tax_info.save!
 end
 
 # Owners
 mike = Owner.find_by_name('Mike') || Owner.create!(name: 'Mike')
 robin = Owner.find_by_name('Robin') || Owner.create!(name: 'Robin')
+
+# Income Taxes
+unless IncomeTaxAccount.find_by_owner_id(mike.id)
+  mike_income_tax = IncomeTaxAccount.create!(
+    owner: mike,
+    filing_status: 'single'
+  )
+  scenario.income_tax_accounts << mike_income_tax
+  scenario.save!
+  activity_2013 = IncomeTaxActivity.create!(
+    year: 2013,
+    filing_status: 'single',
+    wages: BigDecimal.new('182699.22'),
+    taxable_interest: BigDecimal.new('4.69'),
+    taxable_dividends: BigDecimal.new('1892.15'),
+    qualified_dividends: BigDecimal.new('1623.60'),
+    short_term_capital_net: BigDecimal.new('0'),
+    long_term_capital_net: BigDecimal.new('18692.09'),
+    capital_net: BigDecimal.new('18692.09'),
+    adjusted_gross_income: BigDecimal.new('203849.15'),
+    taxable_income: BigDecimal.new('149688.80'),
+    federal_itemized_deductions: BigDecimal.new('50260.35'),
+    federal_income_tax: BigDecimal.new('32565.08'),
+    federal_income_tax_owed: BigDecimal.new('-9260.97'),
+    state_income_tax: BigDecimal.new('15092'),
+    state_income_tax_owed: BigDecimal.new('-917')
+  )
+  mike_income_tax.income_tax_activities << activity_2013
+  mike_income_tax.save!
+end
 
 # Savings
 unless SavingsAccount.find_by_owner_id(mike.id)
@@ -61,6 +133,36 @@ unless IncomeAccount.find_by_owner_id(mike.id)
     annual_raise: RandomVariable.new(0.03, 0.02),
     annual_salary: BigDecimal.new('170000')
   )
+  [
+    ['2014-01', 14166.66, 2770.02,  870.52, 203.59, 1121.47, 140.40, 566.68,  8493.98],
+    ['2014-02', 14166.66, 2736.70,  863.14, 201.86, 1109.29, 139.22, 566.68,  8549.77],
+    ['2014-03', 14166.66, 2749.52,  865.98, 202.53, 1113.98, 139.68, 566.68,  8528.29],
+    ['2014-04', 19166.66, 3500.86, 1173.14, 274.36, 1610.56, 189.22, 766.68, 11651.84],
+    ['2014-05', 14166.66, 2275.86,  863.14, 201.87, 1109.29, 139.22, 566.68,  9010.60],
+    ['2014-06', 14166.66, 2275.86,  863.14, 201.86, 1109.29, 139.22, 566.68,  9010.61],
+    ['2014-07', 14166.66, 2275.86,  863.14, 201.86, 1109.29, 129.40, 566.68,  9020.43],
+    ['2014-08', 14166.66, 2344.48,  878.33, 205.42, 1134.36,   0.00, 566.68,  9037.39],
+    ['2014-09', 14166.66, 2344.48,   13.47, 205.42, 1134.36,   0.00, 566.68,  9902.25],
+    ['2014-10', 14166.66, 2344.48,    0.00, 205.41, 1134.36,   0.00, 566.68,  9915.73],
+    ['2014-11', 14166.66, 2344.48,    0.00, 205.42, 1134.36,   0.00, 566.68,  9915.72],
+    ['2014-12', 14166.66, 2344.48,    0.00, 205.42, 1134.36,   0.00, 566.68,  9915.72],
+    ['2015-01', 14166.66, 2286.53,  870.27, 203.53, 1114.88, 126.33, 566.68,  8998.44]
+  ].each do |d|
+    activity = IncomeAccountActivity.create!(
+      month: Month.parse(d[0]),
+      gross: BigDecimal.new(d[1].to_s),
+      federal_income_tax: BigDecimal.new(d[2].to_s),
+      social_security_tax: BigDecimal.new(d[3].to_s),
+      medicare_tax: BigDecimal.new(d[4].to_s),
+      state_income_tax: BigDecimal.new(d[5].to_s),
+      state_disability_tax: BigDecimal.new(d[6].to_s),
+      pretax_401k_contribution: BigDecimal.new((d[7]/2.0).to_s).round(2),
+      aftertax_401k_contribution: BigDecimal.new((d[7]/2.0).to_s).round(2),
+      net: BigDecimal.new(d[8].to_s)
+    )
+    mike_income.income_account_activities << activity
+    mike_income.save!
+  end
   scenario.income_accounts << mike_income
   scenario.save!
 end
@@ -95,7 +197,8 @@ unless HomeEquityAccount.any?
     month_bought: Month.new(2013, 7),
     loan_amount: BigDecimal.new('1064000'),
     interest_rate: BigDecimal.new('0.04125'),
-    loan_term_months: 360
+    loan_term_months: 360,
+    owner: mike
   )
   equity_data = [
     ['2013-07',    0,       0   ],

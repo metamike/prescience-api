@@ -51,7 +51,7 @@ TaxFormBuilder.constructify do
     cell '38', :adjusted_gross_income, proc { c37 }
     cell '40', proc {
       itemized = f1040a.itemized_deductions
-      [itemized, standard_deduction_worksheet.standard_deduction].max
+      [itemized, fstandard_deduction_worksheet.standard_deduction].max
     }
     cell '41', proc { c38 - c40 }
     cell '42', :exemptions, proc { fexemptions_worksheet.deduction }
@@ -76,7 +76,7 @@ TaxFormBuilder.constructify do
     cell '60', 0
     cell '61', 0
     cell '62', 0
-    cell '63'. :total_tax, proc { [c56, c57, c58, c59, c60, c61, c62].sum }
+    cell '63', :total_tax, proc { [c56, c57, c58, c59, c60, c61, c62].sum }
     # Payments
     cell '64', proc { federal_income_tax_withheld }
     cell '65', 0
@@ -101,7 +101,7 @@ TaxFormBuilder.constructify do
   form :state_income_tax_refund_worksheet do
     cell '1', proc { [state_income_tax_refund, prior_year_state_income_taxes].min }
     cell '2', proc { prior_year_itemized_deductions }
-    cell '3', proc { tax_info.standard_deduction_for_year(tax_year - 1, filing_status) }
+    cell '3', proc { tax_info.standard_deduction(tax_year - 1, filing_status) }
     cell '4', 0
     cell '5', proc { c3 + c4 }
     cell '6', proc { c5 < c2 ? c2 - c5 : :stop }
@@ -114,23 +114,23 @@ TaxFormBuilder.constructify do
       earned_income = f1040.c7 + f1040.c12 + f1040.c18 - f1040.c27
       earned_income > 650 ? earned_income + 350 : 1000
     }
-    cell '2',  proc { tax_info.standard_deduction(filing_status) }
+    cell '2',  proc { tax_info.standard_deduction(tax_year, filing_status) }
     cell '3a', :standard_deduction, proc { [c1, c2].min }
   end
 
   # Deduction for Exemptions
   form :exemptions_worksheet do
     cell '1', proc { f1040.c38 > c4 ? :high_income : :low_income}
-    cell '2', proc { f1040.6d * tax_info.personal_exemption }
+    cell '2', proc { f1040.c6d * tax_info.personal_exemption(tax_year, filing_status) }
     cell '3', proc { f1040.adjusted_gross_income }
-    cell '4', proc { tax_info.personal_exemption_income_limit }
+    cell '4', proc { tax_info.personal_exemption_income_limit(tax_year, filing_status) }
     cell '5', proc { c3 - c4 > 122500 ? :stop : c3 - c4 }
     cell '6', proc { (c5 / 2500).ceil }
     cell '7', proc { (c6 * 0.02).round(2) }
     cell '8', proc { c2 * c7 }
     cell '9', :deduction, proc {
       if c1 == :low_income
-        tax_info.personal_exemption * f1040.c6d
+        tax_info.personal_exemption(tax_year, filing_status) * f1040.c6d
       else
         c5 == :stop ? 0 : c2 - c8
       end

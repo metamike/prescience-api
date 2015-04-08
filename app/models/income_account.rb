@@ -47,6 +47,14 @@ class IncomeAccount < ActiveRecord::Base
     @transactions[month] ? @transactions[month][:gross] : 0
   end
 
+  def federal_income_tax(month)
+    @transactions[month] ? @transactions[month][:federal_income_tax] : 0
+  end
+
+  def state_income_tax(month)
+    @transactions[month] ? @transactions[month][:state_income_tax] : 0
+  end
+
   def taxes(month)
     return 0 unless @transactions[month]
     TAX_FIELDS.reduce(0) { |a, f| a + @transactions[month][f] }
@@ -152,10 +160,10 @@ class IncomeAccount < ActiveRecord::Base
   def calc_social_security_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
-    if wages < tax_info.social_security_wage_limit_for_year(month.year)
+    if wages < tax_info.social_security_wage_limit(month.year)
       ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * SOCIAL_SECURITY_TAX_RATE).round(2)
-    elsif wages - gross < tax_info.social_security_wage_limit_for_year(month.year)
-      taxable = tax_info.social_security_wage_limit_for_year(month.year) - (wages - gross)
+    elsif wages - gross < tax_info.social_security_wage_limit(month.year)
+      taxable = tax_info.social_security_wage_limit(month.year) - (wages - gross)
       ((taxable - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * SOCIAL_SECURITY_TAX_RATE).round(2)
     else
       0
@@ -175,10 +183,10 @@ class IncomeAccount < ActiveRecord::Base
   def calc_state_disability_tax(month, gross)
     tax_info = scenario.tax_info
     wages = ytd_wages(month)
-    if wages < tax_info.state_disability_wage_limit_for_year(month.year)
+    if wages < tax_info.state_disability_wage_limit(month.year)
       ((gross - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * STATE_DISABILITY_TAX_RATE).round(2)
-    elsif wages - gross < tax_info.state_disability_wage_limit_for_year(month.year)
-      taxable = tax_info.state_disability_wage_limit_for_year(month.year) - (wages - gross)
+    elsif wages - gross < tax_info.state_disability_wage_limit(month.year)
+      taxable = tax_info.state_disability_wage_limit(month.year) - (wages - gross)
       ((taxable - @transactions[month][:pretax_401k_contribution] - @transactions[month][:commuter_benefits]) * STATE_DISABILITY_TAX_RATE).round(2)
     else
       0

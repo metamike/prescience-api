@@ -37,6 +37,22 @@ class Scenario < ActiveRecord::Base
     expense_accounts.find { |a| a.owner == owner && a.name == 'Commuter' }
   end
 
+  def medical_accounts_by_owner(owner)
+    expense_accounts.select { |a| a.owner == owner && a.name == 'Medical Care' }
+  end
+
+  def medical_accounts
+    expense_accounts.select { |a| a.name == 'Medical Care' }
+  end
+
+  def property_tax_accounts_by_owner(owner)
+    expense_accounts.select { |a| a.owner == owner && a.name == 'Property Taxes' }
+  end
+
+  def property_tax_accounts
+    expense_accounts.select { |a| a.name == 'Property Taxes' }
+  end
+
   private
 
   def one_401k_per_owner

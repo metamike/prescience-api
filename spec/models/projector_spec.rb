@@ -52,7 +52,7 @@ describe Projector, :type => :model do
         allow(income_account).to receive(:owner).and_return(owner)
         allow(income_account).to receive(:ytd_401k_contributions).with(scenario.starting_month).and_return(0)
         allow(scenario).to receive(:active_401ks_by_owner).with(owner).and_return([traditional_401k, roth_401k])
-        allow(tax_info).to receive(:annual_401k_contribution_limit_for_year).with(scenario.starting_month.year).and_return(0)
+        allow(tax_info).to receive(:annual_401k_contribution_limit).with(scenario.starting_month.year).and_return(0)
         scenario.tax_info = tax_info
         scenario.income_accounts << income_account
         scenario.savings_accounts << savings_account
@@ -71,7 +71,7 @@ describe Projector, :type => :model do
           end
 
           contribution_limit = (savings_balance / 10).round(2)
-          allow(tax_info).to receive(:annual_401k_contribution_limit_for_year).with(scenario.starting_month.year).and_return(contribution_limit)
+          allow(tax_info).to receive(:annual_401k_contribution_limit).with(scenario.starting_month.year).and_return(contribution_limit)
           allow(expense_account).to receive(:project)
           allow(expense_account).to receive(:amount).and_return(0)
           contribution = ((contribution_limit / (12 - scenario.projections_start.month + 1)) / 2).round(2)
@@ -93,7 +93,7 @@ describe Projector, :type => :model do
           end
 
           contribution_limit = savings_balance * 10
-          allow(tax_info).to receive(:annual_401k_contribution_limit_for_year).with(scenario.starting_month.year).and_return(contribution_limit)
+          allow(tax_info).to receive(:annual_401k_contribution_limit).with(scenario.starting_month.year).and_return(contribution_limit)
           allow(expense_account).to receive(:project)
           allow(expense_account).to receive(:amount).and_return(0)
           contribution = ((savings_balance - Projector::MINIMUM_SAVINGS) / 2).round(2)
@@ -113,7 +113,7 @@ describe Projector, :type => :model do
           end
 
           contribution_limit = (savings_balance / 10).round(2)
-          allow(tax_info).to receive(:annual_401k_contribution_limit_for_year).with(scenario.starting_month.year).and_return(contribution_limit)
+          allow(tax_info).to receive(:annual_401k_contribution_limit).with(scenario.starting_month.year).and_return(contribution_limit)
           allow(income_account).to receive(:ytd_401k_contributions).with(scenario.projections_start).and_return((contribution_limit / 2).round(2))
           allow(expense_account).to receive(:project)
           allow(expense_account).to receive(:amount).and_return(0)

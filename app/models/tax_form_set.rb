@@ -20,6 +20,10 @@ class TaxFormSet
     @forms[name.to_s] = form
   end
 
+  def tax_info
+    @account.scenario.tax_info
+  end
+
   def filing_status
     if @account.income_tax_activities.find { |a| a.year == @tax_year }
       @account.income_tax_activities.find { |a| a.year == @tax_year }.filing_status
@@ -136,7 +140,7 @@ class TaxFormSet
     end
   end
 
-  def short_term_capital_net
+  def long_term_capital_net
     if @account.income_tax_activities.find { |a| a.year == @tax_year }
       @account.income_tax_activities.find { |a| a.year == @tax_year }.long_term_capital_net
     else
@@ -146,6 +150,91 @@ class TaxFormSet
         @account.scenario.mutual_funds.reduce(0) { |a, e| a + e.long_term_net(@tax_year) }
       end
     end
+  end
+
+  def medical_expenses
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.medical_expenses
+    else
+      reduce_tax_year do |expenses, month|
+        if @account.owner
+          expenses + @account.scenario.medical_accounts_by_owner(@account.owner).reduce(0) { |a, e| a + e.amount(month) }
+        else
+          expenses + @account.scenario.medical_accounts.reduce(0) { |a, e| a + e.amount(month) }
+        end
+      end
+    end
+  end
+
+  def state_income_tax_withheld
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.state_income_tax_withheld
+    else
+      reduce_tax_year do |withholding, month|
+        if @account.owner
+          withholding + @account.scenario.income_accounts.select { |a| a.owner_id == @account.owner_id }.reduce(0) { |a, e| a + e.state_income_tax(month) }
+        else
+          withholding + @account.scenario.income_accounts.reduce(0) { |a, e| a + e.state_income_tax(month) }
+        end
+      end
+    end
+  end
+
+  def real_estate_taxes
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.real_estate_taxes
+    else
+      reduce_tax_year do |expenses, month|
+        if @account.owner
+          expenses + @account.scenario.property_tax_accounts_by_owner(@account.owner).reduce(0) { |a, e| a + e.amount(month) }
+        else
+          expenses + @account.scenario.property_tax_accounts.reduce(0) { |a, e| a + e.amount(month) }
+        end
+      end
+    end
+  end
+
+  def mortgage_starting_balance
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.mortgage_starting_balance
+    else
+      if @account.owner
+        @account.scenario.home_equity_accounts.find { |a| a.owner == @account.owner }.starting_balance(Month.new(@tax_year, 1))
+      else
+        @account.scenario.home_equity_accounts.first.starting_balance(Month.new(@tax_year, 1))
+      end
+    end
+  end
+
+  def mortgage_ending_balance
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.mortgage_starting_balance
+    else
+      if @account.owner
+        @account.scenario.home_equity_accounts.find { |a| a.owner == @account.owner }.ending_balance(Month.new(@tax_year, 12))
+      else
+        @account.scenario.home_equity_accounts.first.ending_balance(Month.new(@tax_year, 12))
+      end
+    end
+  end
+
+  def mortgage_interest
+    if @account.income_tax_activities.find { |a| a.year == @tax_year }
+      @account.income_tax_activities.find { |a| a.year == @tax_year }.mortgage_interest
+    else
+      reduce_tax_year do |interest, month|
+        if @account.owner
+          interest + @account.scenario.home_equity_accounts.select { |a| a.owner == @account.owner }.reduce(0) { |a, e| a + e.interest(month) }
+        else
+          interest + @account.scenario.home_equity_accounts.reduce(0) { |a, e| a + e.interest(month) }
+        end
+      end
+    end
+  end
+
+  def charity
+    # TODO make this work
+    0
   end
 
   private

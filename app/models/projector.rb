@@ -133,7 +133,7 @@ class Projector
 
   def contribute_to_401ks(month, amount)
     amount_available_per_owner = amount / @scenario.income_accounts.length
-    contribution_limit = @scenario.tax_info.annual_401k_contribution_limit_for_year(month.year)
+    contribution_limit = @scenario.tax_info.annual_401k_contribution_limit(month.year)
     months_remaining = 12 - month.month + 1
     contributed = 0
     @scenario.income_accounts.each do |income_account|

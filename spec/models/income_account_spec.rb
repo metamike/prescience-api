@@ -12,8 +12,8 @@ describe IncomeAccount, :type => :model do
     allow(scenario).to receive(:home_equity_accounts).and_return([])
     allow(scenario).to receive(:tax_info).and_return(tax_info)
     allow(scenario).to receive(:commuter_account_by_owner)
-    allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(0)
-    allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(0)
+    allow(tax_info).to receive(:social_security_wage_limit).and_return(0)
+    allow(tax_info).to receive(:state_disability_wage_limit).and_return(0)
   end
 
   context 'validations' do
@@ -120,7 +120,7 @@ describe IncomeAccount, :type => :model do
 
     context 'well before social security wage limit' do
       it 'should deduct social security tax' do
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:social_security_wage_limit).and_return(account.annual_salary)
         account.project(account.starting_month)
         expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
         tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
@@ -134,7 +134,7 @@ describe IncomeAccount, :type => :model do
 
     context 'coming up on social security wage limit' do
       it 'should deduct partial social security tax' do
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary * 1.5 / 12)
+        allow(tax_info).to receive(:social_security_wage_limit).and_return(account.annual_salary * 1.5 / 12)
         account.project(account.starting_month)
         account.project(account.starting_month.next)
         expect(account.gross(account.starting_month.next)).to eq((account.annual_salary / 12.0).round(2))
@@ -150,10 +150,10 @@ describe IncomeAccount, :type => :model do
     context 'at start of a new year' do
       let(:month) { build(:month, year: account.starting_month.year, month: 12) }
       it 'should withhold social security and state disability taxes' do
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
+        allow(tax_info).to receive(:social_security_wage_limit).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
+        allow(tax_info).to receive(:state_disability_wage_limit).with(account.starting_month.year).and_return(account.annual_salary * 0.5 / 12)
+        allow(tax_info).to receive(:social_security_wage_limit).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
+        allow(tax_info).to receive(:state_disability_wage_limit).with(account.starting_month.year + 1).and_return(account.annual_salary * 1.5 / 12)
         account.starting_month = month
         account.project(month)
         account.project(month.next)
@@ -170,7 +170,7 @@ describe IncomeAccount, :type => :model do
 
     context 'well before state disability wage limit' do
       it 'should deduct state disability tax' do
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit).and_return(account.annual_salary)
         account.project(account.starting_month)
         expect(account.gross(account.starting_month)).to eq((account.annual_salary / 12.0).round(2))
         tax = (IncomeAccount::FEDERAL_INCOME_TAX_RATE * account.annual_salary / 12.0).round(2)
@@ -184,7 +184,7 @@ describe IncomeAccount, :type => :model do
 
     context 'coming up on state disability wage limit' do
       it 'should deduct partial state disability tax' do
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary * 1.5 / 12)
+        allow(tax_info).to receive(:state_disability_wage_limit).and_return(account.annual_salary * 1.5 / 12)
         account.project(account.starting_month)
         account.project(account.starting_month.next)
         expect(account.gross(account.starting_month.next)).to eq((account.annual_salary / 12.0).round(2))
@@ -199,8 +199,8 @@ describe IncomeAccount, :type => :model do
 
     context 'with pretax 401(k) contributions' do
       it 'should deduct them from the gross' do
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:social_security_wage_limit).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit).and_return(account.annual_salary)
         contribution = (account.annual_salary / 12 / 2.0).round(2)
         monthly = account.annual_salary / 12.0
         account.record_pretax_401k_contribution(account.starting_month, contribution)
@@ -219,8 +219,8 @@ describe IncomeAccount, :type => :model do
 
     context 'with aftertax 401(k) contributions' do
       it 'should not deduct them from the gross' do
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:social_security_wage_limit).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit).and_return(account.annual_salary)
         contribution = (account.annual_salary / 12 / 2.0).round(2)
         monthly = account.annual_salary / 12.0
         account.record_aftertax_401k_contribution(account.starting_month, contribution)
@@ -241,8 +241,8 @@ describe IncomeAccount, :type => :model do
       let(:commuter_account) { instance_double(ExpenseAccount) }
       it 'should count them as pretax deductions' do
         monthly = account.annual_salary / 12.0
-        allow(tax_info).to receive(:social_security_wage_limit_for_year).and_return(account.annual_salary)
-        allow(tax_info).to receive(:state_disability_wage_limit_for_year).and_return(account.annual_salary)
+        allow(tax_info).to receive(:social_security_wage_limit).and_return(account.annual_salary)
+        allow(tax_info).to receive(:state_disability_wage_limit).and_return(account.annual_salary)
         allow(scenario).to receive(:commuter_account_by_owner).with(account.owner).and_return(commuter_account)
         expect(commuter_account).to receive(:project).with(account.starting_month)
         contribution = (monthly / 10.0).round(2)

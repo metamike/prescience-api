@@ -34,9 +34,9 @@ TaxFormBuilder.constructify do
     cell '26', proc { (c25 * 0.02).round(2) }
     cell '27', proc { c26 > c24 ? 0 : c24 - c26 }
     # Other Miscellaneous Deductions
-    cell '28' 0
+    cell '28', 0
     # Total Itemized Deductions
-    cell '29'
+    cell '29', :itemized_deductions, proc { fitemized_deductions_worksheet.c10 }
   end
 
   # Mortgage Interest Worksheet
@@ -63,13 +63,13 @@ TaxFormBuilder.constructify do
     cell '1', proc { [f1040a.c4, f1040a.c9, f1040a.c15, f1040a.c19, f1040a.c20,
                       f1040a.c27, f1040a.c28].sum }
     cell '2', proc { [f1040a.c4, f1040a.c14, f1040a.c20, f1040a.c28].sum }
-    cell '3', proc { c2 < c1 ? :stop : c1 - c2 }
+    cell '3', proc { c2 < c1 ? c1 - c2 : :stop }
     cell '4', proc { (c3 * 0.8).round(2) }
     cell '5', proc { f1040.adjusted_gross_income }
     cell '6', proc { tax_info.personal_exemption_income_limit(tax_year, filing_status) }
-    cell '7', proc { c6 < c5 ? :stop : c5 - c6 }
+    cell '7', proc { c6 < c5 ? c5 - c6 : :stop }
     cell '8', proc { (c7 * 0.03).round(2) }
     cell '9', proc { [c4, c8].min }
-    cell '10', :total_itemized_deductions, proc { c1 - c9 }
+    cell '10', :total_itemized_deductions, proc { c3 == :stop || c7 == :stop ? c1 : c1 - c9 }
   end
 end

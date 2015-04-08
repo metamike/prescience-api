@@ -18,6 +18,17 @@
 - 401k contributions
 - commuter benefits
 TODO Annual Income Taxes
+ * Federal Tax Worksheet: (year, status)
+    - up to X
+       - slope
+       - intercept
+    - [brackets]
+       - limit
+       - rate
+       - subtraction
+    - top bracket
+       - rate
+       - subtraction
 TODO share a global interest rate
 TODO 401(k) rollovers
 TODO One-Time Expenses

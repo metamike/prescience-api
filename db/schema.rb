@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150405212223) do
+ActiveRecord::Schema.define(version: 20150406144340) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -42,6 +42,23 @@ ActiveRecord::Schema.define(version: 20150405212223) do
   end
 
   add_index "expense_accounts", ["scenario_id"], name: "index_expense_accounts_on_scenario_id", using: :btree
+
+  create_table "historical_tax_infos", force: :cascade do |t|
+    t.integer  "tax_info_id"
+    t.integer  "year"
+    t.decimal  "social_security_wage_limit",              precision: 9, scale: 2
+    t.decimal  "state_disability_wage_limit",             precision: 9, scale: 2
+    t.decimal  "annual_401k_contribution_limit",          precision: 8, scale: 2
+    t.decimal  "standard_deduction",                      precision: 8, scale: 2
+    t.decimal  "max_capital_loss",                        precision: 7, scale: 2
+    t.datetime "created_at",                                                      null: false
+    t.datetime "updated_at",                                                      null: false
+    t.decimal  "personal_exemption_income_limit_single",  precision: 9, scale: 2
+    t.decimal  "personal_exemption_income_limit_married", precision: 9, scale: 2
+    t.decimal  "personal_exemption",                      precision: 7, scale: 2
+  end
+
+  add_index "historical_tax_infos", ["tax_info_id"], name: "index_historical_tax_infos_on_tax_info_id", using: :btree
 
   create_table "home_equity_account_activities", force: :cascade do |t|
     t.integer  "home_equity_account_id"
@@ -111,22 +128,29 @@ ActiveRecord::Schema.define(version: 20150405212223) do
     t.integer  "year"
     t.integer  "income_tax_account_id"
     t.string   "filing_status"
-    t.decimal  "wages",                       precision: 9,  scale: 2
-    t.decimal  "taxable_interest",            precision: 7,  scale: 2
-    t.decimal  "taxable_dividends",           precision: 7,  scale: 2
-    t.decimal  "qualified_dividends",         precision: 7,  scale: 2
-    t.decimal  "short_term_capital_net",      precision: 9,  scale: 2
-    t.decimal  "long_term_capital_net",       precision: 9,  scale: 2
-    t.decimal  "adjusted_gross_income",       precision: 10, scale: 2
-    t.decimal  "taxable_income",              precision: 10, scale: 2
-    t.decimal  "federal_itemized_deductions", precision: 9,  scale: 2
-    t.decimal  "federal_income_tax",          precision: 9,  scale: 2
-    t.decimal  "federal_income_tax_owed",     precision: 9,  scale: 2
-    t.decimal  "state_income_tax",            precision: 9,  scale: 2
-    t.decimal  "state_income_tax_owed",       precision: 9,  scale: 2
-    t.datetime "created_at",                                           null: false
-    t.datetime "updated_at",                                           null: false
-    t.decimal  "capital_net",                 precision: 9,  scale: 2
+    t.decimal  "wages",                         precision: 9,  scale: 2
+    t.decimal  "taxable_interest",              precision: 7,  scale: 2
+    t.decimal  "taxable_dividends",             precision: 7,  scale: 2
+    t.decimal  "qualified_dividends",           precision: 7,  scale: 2
+    t.decimal  "short_term_capital_net",        precision: 9,  scale: 2
+    t.decimal  "long_term_capital_net",         precision: 9,  scale: 2
+    t.decimal  "adjusted_gross_income",         precision: 10, scale: 2
+    t.decimal  "taxable_income",                precision: 10, scale: 2
+    t.decimal  "federal_itemized_deductions",   precision: 9,  scale: 2
+    t.decimal  "federal_income_tax",            precision: 9,  scale: 2
+    t.decimal  "federal_income_tax_owed",       precision: 9,  scale: 2
+    t.decimal  "state_income_tax",              precision: 9,  scale: 2
+    t.decimal  "state_income_tax_owed",         precision: 9,  scale: 2
+    t.datetime "created_at",                                             null: false
+    t.datetime "updated_at",                                             null: false
+    t.decimal  "capital_net",                   precision: 9,  scale: 2
+    t.decimal  "federal_income_tax_withheld",   precision: 9,  scale: 2
+    t.decimal  "social_security_tax_withheld",  precision: 9,  scale: 2
+    t.decimal  "state_income_tax_withheld",     precision: 9,  scale: 2
+    t.decimal  "state_disability_tax_withheld", precision: 9,  scale: 2
+    t.decimal  "real_estate_taxes",             precision: 8,  scale: 2
+    t.decimal  "mortgage_starting_balance",     precision: 10, scale: 2
+    t.decimal  "mortgage_ending_balance",       precision: 10, scale: 2
   end
 
   add_index "income_tax_activities", ["income_tax_account_id"], name: "index_income_tax_activities_on_income_tax_account_id", using: :btree
@@ -207,19 +231,16 @@ ActiveRecord::Schema.define(version: 20150405212223) do
   add_index "stock_bundles", ["investment_account_id"], name: "index_stock_bundles_on_investment_account_id", using: :btree
 
   create_table "tax_infos", force: :cascade do |t|
-    t.integer  "starting_year"
-    t.decimal  "social_security_wage_limit",                 precision: 9, scale: 2
     t.string   "social_security_wage_limit_growth_rate"
-    t.decimal  "state_disability_wage_limit",                precision: 9, scale: 2
     t.string   "state_disability_wage_limit_growth_rate"
     t.integer  "scenario_id"
-    t.datetime "created_at",                                                         null: false
-    t.datetime "updated_at",                                                         null: false
-    t.integer  "annual_401k_contribution_limit"
+    t.datetime "created_at",                                  null: false
+    t.datetime "updated_at",                                  null: false
     t.string   "annual_401k_contribution_limit_growth_rate"
-    t.decimal  "standard_deduction",                         precision: 8, scale: 2
     t.string   "standard_deduction_growth_rate"
-    t.decimal  "max_capital_loss",                           precision: 7, scale: 2
+    t.string   "max_capital_loss_growth_rate"
+    t.string   "personal_exemption_income_limit_growth_rate"
+    t.string   "personal_exemption_growth_rate"
   end
 
   add_index "tax_infos", ["scenario_id"], name: "index_tax_infos_on_scenario_id", using: :btree

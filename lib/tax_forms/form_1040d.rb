@@ -20,7 +20,7 @@ TaxFormBuilder.constructify do
     cell '17', proc { c15 > 0 && c16 > 0 ? :yes : :no }
     cell '18', 0
     cell '19', 0
-    cell '21', proc { [-tax_info.max_capital_loss_for_year(tax_year, filing_status), c16].max }
+    cell '21', proc { [-tax_info.max_capital_loss, c16].max }
     cell '23', :capital_net, proc { c16 >= 0 ? c16 : c21 }
   end
 

@@ -79,7 +79,7 @@ class HomeEquityAccount < ActiveRecord::Base
 
   def activities_must_be_in_sequence
     current_month = month_bought
-    home_equity_account_activities.each do |activity|
+    home_equity_account_activities.sort_by(&:month).each do |activity|
       if activity.month != current_month
         errors.add(:home_equity_account_activities, "activity #{activity.month} is out of sequence")
         break

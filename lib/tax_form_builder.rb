@@ -21,3 +21,5 @@ module TaxFormBuilder
   end
 
 end
+
+Dir['./lib/tax_forms/*.rb'].each { |f| require f }

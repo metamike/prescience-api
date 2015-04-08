@@ -12,6 +12,12 @@ class IncomeTaxActivity < ActiveRecord::Base
   validates :qualified_dividends, numericality: true, allow_nil: true
   validates :short_term_capital_net, numericality: true, allow_nil: true
   validates :long_term_capital_net, numericality: true, allow_nil: true
+  validates :federal_income_tax_withheld, numericality: true, allow_nil: true
+  validates :social_security_tax_withheld, numericality: true, allow_nil: true
+  validates :state_income_tax_withheld, numericality: true, allow_nil: true
+  validates :state_disability_tax_withheld, numericality: true, allow_nil: true
+  validates :mortgage_starting_balance, numericality: true, allow_nil: true
+  validates :mortgage_ending_balance, numericality: true, allow_nil: true
 
   # Outputs
   validates :capital_net, presence: true, numericality: true
