@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150406144340) do
+ActiveRecord::Schema.define(version: 20150408145155) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -229,6 +229,15 @@ ActiveRecord::Schema.define(version: 20150406144340) do
   end
 
   add_index "stock_bundles", ["investment_account_id"], name: "index_stock_bundles_on_investment_account_id", using: :btree
+
+  create_table "tax_brackets", force: :cascade do |t|
+    t.integer "historical_tax_info_id"
+    t.string  "type"
+    t.string  "filing_status"
+    t.decimal "lower_bound",            precision: 9, scale: 2
+    t.decimal "slope",                  precision: 4, scale: 3
+    t.decimal "intercept",              precision: 8, scale: 2
+  end
 
   create_table "tax_infos", force: :cascade do |t|
     t.string   "social_security_wage_limit_growth_rate"
